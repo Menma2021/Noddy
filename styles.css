@@ -1,0 +1,63 @@
+body {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+svg {
+    width: 100vw;
+    height: 100vh;
+    transition: background-color 0.3s;
+    overflow: visible; /* Allow overflowing elements */
+}
+
+body[data-theme='dark'] svg {
+    background-color: #000;
+}
+
+body[data-theme='light'] svg {
+    background-color: #fff;
+}
+
+.link {
+    stroke-width: 2px;
+    stroke: #999;
+    opacity: 0.6;
+}
+
+.node text {
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    fill: currentColor;
+}
+
+.node circle {
+    stroke-width: 2px;
+    cursor: pointer;
+    transition: fill 0.3s;
+}
+
+body[data-theme='dark'] .node circle {
+    fill: #444;
+    stroke: #bbb;
+}
+
+body[data-theme='dark'] .node text {
+    fill: #ddd;
+}
+
+body[data-theme='light'] .node circle {
+    fill: #fff;
+    stroke: #333;
+}
+
+body[data-theme='light'] .node text {
+    fill: #111;
+}
+
+.node.central circle {
+    fill: #474cf1 !important; /* Unique color for the central node */
+    stroke: #2329da !important;
+}

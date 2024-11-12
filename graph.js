@@ -2,6 +2,7 @@
 
 class Graph {
     constructor(element,central_node) {
+        this.central_node = central_node;
         this.data = {
           nodes: [ // all nodes
               { id: central_node, isCentral: true },
@@ -170,7 +171,7 @@ class Graph {
 
     // Prompt the model and stream the result:
 
-        const userInput = "Bocchi the Rock! ";
+        const userInput = this.central_node;
 
         const prompt = `
 When a user searches for a keyword, generate a structured response with the following requirements:

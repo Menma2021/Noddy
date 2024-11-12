@@ -68,14 +68,14 @@ class MainContent {
             const stream = session.promptStreaming(prompt);
             for await (const chunk of stream) {
                 console.log(chunk);
-            // Insert the summary into the summary_box container on the HTML page
-            this.summary_box.innerHTML = chunk;
-                
+                // Insert the summary into the summary_box container on the HTML page
+                this.summary_box.innerHTML = marked.parse(chunk);
                 
             }
         }
     }
 }
 
-
-const main_content = new MainContent("University of Manchester");
+document.addEventListener("DOMContentLoaded", () => {
+    const main_content = new MainContent("University of Manchester");
+});

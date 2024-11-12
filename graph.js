@@ -16,6 +16,7 @@ class Graph {
         this.width = window.innerWidth;
         this.height = window.innerHeight;
         this.scale = 1;
+        this.mouse_move_speed = 0.01;
         this.element = element;
         this.svg = d3.select(element)
             .append("svg")
@@ -55,6 +56,29 @@ class Graph {
             const mouse_x_viewbox = viewBoxX + (mouse_x / elementWidth) * viewBoxWidth;
             const mouse_y_viewbox = viewBoxY + (mouse_y / elementHeight) * viewBoxHeight;
             this.change_size(newScale,mouse_x_viewbox,mouse_y_viewbox ,viewBoxX,viewBoxY,viewBoxWidth,viewBoxHeight);
+        });
+        
+        this.element.addEventListener("mousedown", (event) => {
+            this.is_dragging = true;
+            this.mouse_x_temp = event.clientX;
+            this.mouse_y_temp = event.clientY;
+        });
+        this.element.addEventListener("mousemove", (event) => {
+            if (this.is_dragging) {
+                const mouse_x_delta = -(event.clientX - this.mouse_x_temp)*this.scale;
+                const mouse_y_delta = -(event.clientY - this.mouse_y_temp)*this.scale;
+                this.mouse_x_temp = event.clientX;
+                this.mouse_y_temp = event.clientY;
+                const viewBox = this.svg.attr("viewBox").split(" ");
+                const viewBoxX = parseFloat(viewBox[0])+mouse_x_delta;
+                const viewBoxY = parseFloat(viewBox[1])+mouse_y_delta;
+                const viewBoxWidth = parseFloat(viewBox[2]);
+                const viewBoxHeight = parseFloat(viewBox[3]);
+                this.svg.attr("viewBox", `${viewBoxX} ${viewBoxY} ${viewBoxWidth} ${viewBoxHeight}`);
+            }
+        });
+        this.element.addEventListener("mouseup", (event) => {
+            this.is_dragging = false;
         });
     }
     initinal_graph() {
@@ -270,5 +294,5 @@ print $1L$ ${userInput} $STP$ as the first line!
 }
 
 
-const graph = new Graph(document.getElementsByClassName("graph")[0],"number");
+const graph = new Graph(document.getElementsByClassName("graph")[0],"First Year Project");
 

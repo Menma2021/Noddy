@@ -14,12 +14,9 @@ class MainContent {
         const content_container = document.getElementById('content_container');
         content_container.appendChild(this.element);
         
-
-
         this.start_generate_graph();
-
-
     }
+
     initinal_graph(key_data){
         this.element_graph = document.createElement('div');
         this.element_graph.classList.add('graph');
@@ -32,24 +29,31 @@ class MainContent {
         this.element.appendChild(this.summary_box);
     }
     async start_generate_graph() {
+        // Generate graph data asynchronously
         await this.graph.get_graph_data();
-        await this.generate_summary();
+
+        const graphData = this.graph.data; // Make sure graphData is available here
+        if (graphData) {
+            await this.generate_summary(graphData);  // Pass the graph data to the summary generation
+        } else {
+            console.log("Graph data is not available.");
+        }
     }
 
-    generate_summary_prompt(){
-        /*
-        this function generate the prompt for the summary of the graph
-        the prompt is :
-        "....
-        "
-        */
-        const data=this.graph.data;
+    generate_summary_prompt(graphData){
+        // Create a prompt to generate the summary based on the graph data
+        const nodes = graphData.nodes.map(node => node.id).join(', ');
+        const links = graphData.links.map(link => `${link.source.id} -> ${link.target.id}`).join(', ');
+
         const prompt = `
-        brabrabra
+        Summarize the following graph data:
+        Nodes: ${nodes}
+        Links: ${links}
+        Please provide a brief summary of the connections and key elements in the graph.
         `;
         return prompt;
     }
-    async generate_summary() {
+    async generate_summary(graphData) {
         const {available, defaultTemperature, defaultTopK, maxTopK } = await ai.languageModel.capabilities();
 
         if (available !== "no") {
@@ -57,12 +61,15 @@ class MainContent {
           
             // Prompt the model and stream the result:
 
-            const prompt = this.generate_summary_prompt();
-            console.log(prompt);
+            const prompt = this.generate_summary_prompt(graphData);
+            console.log('Summary Prompt:', prompt);
+            
+            // Send the prompt to the AI and stream the result            
             const stream = session.promptStreaming(prompt);
             for await (const chunk of stream) {
                 console.log(chunk);
-                this.summary_box.innerHTML = chunk;
+            // Insert the summary into the summary_box container on the HTML page
+            this.summary_box.innerHTML = chunk;
                 
                 
             }
@@ -71,4 +78,4 @@ class MainContent {
 }
 
 
-main_content = new MainContent("Hello World");
+const main_content = new MainContent("University of Manchester");

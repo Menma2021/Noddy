@@ -73,4 +73,5 @@ body[data-theme='light'] .node text {
     overflow: hidden;
     position: absolute;
     bottom: 0;
+    margin-left: 10%;
 }

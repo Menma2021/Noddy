@@ -229,17 +229,40 @@ print $1L$ ${userInput} $STP$ as the first line!
         }
     }
 
-    transform_data(data) {
+    transform_data(input) {
+        const nodePattern = /\$?\d+L\$? (.*?) \$?[^a-zA-Z0-9]?STP\$?/g; /*To explain this gibberish: /.../g - start and end of the pattern. 
+            \$? looks for $, but makes "$" optional. \d+ looks for a number (d is for digit, + means that there can be more than one digits)
+            (.*?) - basically, .* will include any characters that are not white spaces after first part. To make it not include stop sign, 
+            ? makes it so that it included as small as possible. The last part is self explanatory */
+        const nodes = [];
+        const links = [];
+        const nodeLayers = {};
+        const lastNode = {}; // Tracking of a last updated node
+    
+        let match;
+        while ((match = nodePattern.exec(input)) !== null) {
+            const layer = parseInt(match[0].match(/\d+L/)[0].slice(0, -1), 10);
+            const nodeName = match[1].trim();
+    
+            // Adding node to the list if not already present
+            if (!nodes.some(node => node.id === nodeName)) {
+                nodes.push({ id: nodeName, isCentral: layer === 1 });
+            }
+    
+            // Adding nodes based on layer
+            nodeLayers[layer] = nodeLayers[layer] || [];
+            nodeLayers[layer].push(nodeName);
+    
+            // Vertice to the last node in the previous layer
+            if (layer > 1 && lastNode[layer - 1]) {
+                links.push({ source: lastNode[layer - 1], target: nodeName });
+            }
+    
+            lastNode[layer] = nodeName;
+        }
 
         const new_data = {
-            nodes: [ // all nodes
-                { id: "Graph Theory", isCentral: true },
-                { id: "Graph" },
-                
-            ],
-            links: [ // all nodes connections
-                
-            ]
+            nodes, links
           };
         return new_data;
     }

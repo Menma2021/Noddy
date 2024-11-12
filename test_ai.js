@@ -7,7 +7,7 @@ async function test_ai() {
 
     // Prompt the model and stream the result:
 
-    const userInput = "Mozart";
+    const userInput = "Bocchi the Rock! ";
 
     const prompt = `
 When a user searches for a keyword, generate a structured response with the following requirements:

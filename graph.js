@@ -1,7 +1,7 @@
 
 
 class Graph {
-    constructor() {
+    constructor(element) {
         this.data = {
           nodes: [ // all nodes
               { id: "Algorithms and Data Structures", isCentral: true },
@@ -34,7 +34,9 @@ class Graph {
         
         this.width = window.innerWidth;
         this.height = window.innerHeight;
-        this.svg = d3.select(".graph")
+        this.scale = 1;
+        this.element = element;
+        this.svg = d3.select(element)
             .append("svg")
             .attr("width", this.width)
             .attr("height", this.height)
@@ -43,8 +45,36 @@ class Graph {
             .force("link", d3.forceLink(this.data.links).id(d => d.id).distance(100))
             .force("charge", d3.forceManyBody().strength(-500))
             .force("center", d3.forceCenter(this.width / 2, this.height / 2));
+        this.initinal_listener();
         this.initinal_graph();
+
+        this.svg.attr("viewBox", `${0} ${0} ${600} ${600}`);
+
         
+
+        
+    }
+    initinal_listener() {
+        this.element.addEventListener("wheel", (event) => {
+    
+            const delta = event.deltaY/100;
+            const min_scale = 0.5;
+            const newScale = Math.max(min_scale, this.scale + delta);
+            console.log(newScale);
+            const mouse_x = event.clientX - this.svg.node().getBoundingClientRect().left;
+            const mouse_y = event.clientY - this.svg.node().getBoundingClientRect().top;
+            const viewBox = this.svg.attr("viewBox").split(" ");
+            const viewBoxX = parseFloat(viewBox[0]);
+            const viewBoxY = parseFloat(viewBox[1]);
+            const viewBoxWidth = parseFloat(viewBox[2]);
+            const viewBoxHeight = parseFloat(viewBox[3]);
+            console.log(viewBoxX,viewBoxY,viewBoxWidth,viewBoxHeight);
+            const elementWidth = this.svg.node().clientWidth;
+            const elementHeight = this.svg.node().clientHeight;
+            const mouse_x_viewbox = viewBoxX + (mouse_x / elementWidth) * viewBoxWidth;
+            const mouse_y_viewbox = viewBoxY + (mouse_y / elementHeight) * viewBoxHeight;
+            this.change_size(newScale,mouse_x_viewbox,mouse_y_viewbox ,viewBoxX,viewBoxY,viewBoxWidth,viewBoxHeight);
+        });
     }
     initinal_graph() {
         this.isHorizontal = false; // Change this for different layout
@@ -129,19 +159,35 @@ class Graph {
         this.simulation.force("link").links(newData.links);
         this.simulation.alpha(1).restart();
     }
+
+    change_size(scale,mouse_x,mouse_y,viewBoxX,viewBoxY,viewBoxWidth,viewBoxHeight) {
+        
+       
+        const corners = [
+            [viewBoxX, viewBoxY],
+            [viewBoxX + viewBoxWidth, viewBoxY],
+            [viewBoxX, viewBoxY + viewBoxHeight],
+            [viewBoxX + viewBoxWidth, viewBoxY + viewBoxHeight]
+        ];
+        const new_corners = [];
+        for (const corner of corners) {
+            const [x, y] = corner;
+            const newX = mouse_x - (mouse_x - x) * (scale/this.scale);
+            const newY = (mouse_y - (mouse_y - y) * (scale/this.scale));
+            new_corners.push([newX, newY]);
+        }
+
+        console.log(scale,mouse_x,mouse_y,viewBoxX,viewBoxY,viewBoxWidth,viewBoxHeight);
+        console.log(corners);
+        console.log(new_corners);
+        this.scale = scale;
+        console.log(new_corners[3][0]-new_corners[0][0],new_corners[3][1]-new_corners[0][1]);
+        this.svg.attr("viewBox", `${new_corners[0][0]} ${new_corners[0][1]} ${new_corners[3][0]-new_corners[0][0]} ${new_corners[3][1]-new_corners[0][1]}`);
+    }
 }
-const graph = new Graph();
-document.addEventListener("DOMContentLoaded", () => {
-  
 
-});
-document.addEventListener("click", () => {
-    const newData = {
-        nodes: [...graph.data.nodes],
-        links: [...graph.data.links]
-    };
-    newData.nodes.push({ id: "Graph Theory" });
-    newData.links.push({ source: "Algorithms and Data Structures", target: "Graph Theory" });
 
-    graph.updateGraph(newData);
-});
+const graph = new Graph(document.getElementsByClassName("graph")[0]);
+
+
+

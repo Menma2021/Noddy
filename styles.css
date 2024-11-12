@@ -67,3 +67,10 @@ body[data-theme='light'] .node text {
     height: 100%;
     overflow: hidden;
 }
+.summary_box{
+    width: 80%;
+    height: 30%;
+    overflow: hidden;
+    position: absolute;
+    bottom: 0;
+}

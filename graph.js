@@ -29,13 +29,14 @@ class Graph {
             .force("center", d3.forceCenter(this.width / 2, this.height / 2));
         this.initinal_listener();
         this.initinal_graph();
-        this.get_graph_data();
+        
         this.svg.attr("viewBox", `${0} ${0} ${this.width} ${this.height}`);
 
         
 
         
     }
+
     initinal_listener() {
         this.element.addEventListener("wheel", (event) => {
     
@@ -293,6 +294,4 @@ print $1L$ ${userInput} $STP$ as the first line!
     }
 }
 
-
-const graph = new Graph(document.getElementsByClassName("graph")[0],"First Year Project");
 

@@ -1,5 +1,5 @@
 
-
+document.body.dataset.theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 class Graph {
     constructor(element,central_node) {
         this.central_node = central_node;
@@ -29,7 +29,7 @@ class Graph {
         this.initinal_listener();
         this.initinal_graph();
         this.get_graph_data();
-        this.svg.attr("viewBox", `${0} ${0} ${600} ${600}`);
+        this.svg.attr("viewBox", `${0} ${0} ${this.width} ${this.height}`);
 
         
 
@@ -270,5 +270,5 @@ print $1L$ ${userInput} $STP$ as the first line!
 }
 
 
-const graph = new Graph(document.getElementsByClassName("graph")[0],"Graph Theory");
+const graph = new Graph(document.getElementsByClassName("graph")[0],"number");
 

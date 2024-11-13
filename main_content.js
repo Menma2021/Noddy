@@ -50,7 +50,7 @@ class MainContent {
         Summarize the following graph data:
         Nodes: ${nodes}
         Links: ${links}
-        Please provide a brief summary of the connections and key elements in the graph.
+        Please provide a brief summary of the nodes. Take the first node as the main topic, and trace down to each nodes
         `;
         return prompt;
     }

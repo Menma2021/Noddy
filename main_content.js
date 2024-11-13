@@ -3,6 +3,7 @@ this is the main content of the page
 it contains the graph
 and summary of the graph
 and the description of the each node
+Xuanpei Chen 2024/11/11
 */
 
 class MainContent {
@@ -21,7 +22,7 @@ class MainContent {
         this.element_graph = document.createElement('div');
         this.element_graph.classList.add('graph');
         this.element.appendChild(this.element_graph);
-        this.graph = new Graph(this.element_graph,key_data);
+        this.graph = new Graph(this.element_graph,key_data,this);
     }
     initinal_summary_box(){
         this.summary_box = document.createElement('div');
@@ -76,6 +77,4 @@ class MainContent {
     }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-    const main_content = new MainContent("WeChat");
-});
+

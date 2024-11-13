@@ -1,8 +1,9 @@
 
 document.body.dataset.theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 class Graph {
-    constructor(element,central_node) {
+    constructor(element,central_node,main_content) {
         this.central_node = central_node;
+        this.main_content = main_content;
         this.data = {
           nodes: [ // all nodes
               { id: central_node, isCentral: true },
@@ -12,6 +13,8 @@ class Graph {
               
           ]
         };
+        this.mouse_x_temp = 0;
+        this.mouse_y_temp = 0;
         
         this.width = window.innerWidth;
         this.height = window.innerHeight;
@@ -32,7 +35,9 @@ class Graph {
         
         this.svg.attr("viewBox", `${0} ${0} ${this.width} ${this.height}`);
 
-        
+        this.box_element=document.createElement('div');
+
+        this.description_dict={};
 
         
     }
@@ -68,8 +73,7 @@ class Graph {
             if (this.is_dragging) {
                 const mouse_x_delta = -(event.clientX - this.mouse_x_temp)*this.scale;
                 const mouse_y_delta = -(event.clientY - this.mouse_y_temp)*this.scale;
-                this.mouse_x_temp = event.clientX;
-                this.mouse_y_temp = event.clientY;
+                
                 const viewBox = this.svg.attr("viewBox").split(" ");
                 const viewBoxX = parseFloat(viewBox[0])+mouse_x_delta;
                 const viewBoxY = parseFloat(viewBox[1])+mouse_y_delta;
@@ -77,10 +81,99 @@ class Graph {
                 const viewBoxHeight = parseFloat(viewBox[3]);
                 this.svg.attr("viewBox", `${viewBoxX} ${viewBoxY} ${viewBoxWidth} ${viewBoxHeight}`);
             }
+            this.mouse_x_temp = event.clientX;
+            this.mouse_y_temp = event.clientY;
         });
         this.element.addEventListener("mouseup", (event) => {
             this.is_dragging = false;
         });
+    }
+
+    node_click_listener(){
+
+    }
+    node_hover_listener(circle_element){
+        this.box_element.remove();
+
+        const box_offset_x=100;
+        const box_offset_y=120;
+        let box_position_x=this.mouse_x_temp+box_offset_x-window.innerWidth*0.2;
+        const box_position_y=this.mouse_y_temp-box_offset_y;
+        
+        if (box_position_x+window.innerWidth * 0.4>window.innerWidth){
+            box_position_x=this.mouse_x_temp-box_offset_x-200-window.innerWidth * 0.2;
+        }
+        
+
+        this.box_element = document.createElement('div');
+        this.box_element.style.width = `${window.innerWidth * 0.2}px`;
+        this.box_element.style.height = `${window.innerHeight * 0.4}px`;
+        this.box_element.style.position = 'absolute';
+        this.box_element.style.left = `${box_position_x}px`;
+        this.box_element.style.top = `${box_position_y}px`;
+        this.box_element.style.backgroundColor = 'white';
+        this.box_element.style.border = '1px solid black';
+        this.box_element.classList.add('discription_box');
+
+        const title_element=document.createElement('div');
+        title_element.innerHTML=d3.select(circle_element.parentNode).select('text').text();
+        title_element.style.fontSize = '20px';
+        title_element.style.fontWeight = 'bold';
+        this.content_element=document.createElement('div');
+        this.box_element.appendChild(title_element);
+        this.box_element.appendChild(this.content_element);
+        this.main_content.element.appendChild(this.box_element);
+
+        this.generate_description(title_element.innerHTML,this.content_element);
+
+
+        console.log(circle_element);
+        console.log(d3.select(circle_element));
+    }
+    generate_description_prompt(keyword){
+        console.log(this.data);
+
+        console.log(keyword);
+        
+        const prompt = `
+        My name is Xuanpei Chen, I am a student at the University of California, Los Angeles.
+        I am a software engineer and a data scientist.
+        I am interested in the following keywords:
+        
+        `;
+
+        return prompt;
+    }
+    async generate_description(keyword){
+        if (this.session){
+            this.session.destroy();
+            this.session = null;
+        }
+        if (this.description_dict[keyword]){
+            this.content_element.innerHTML = this.description_dict[keyword];
+            return;
+        }
+
+        const {available, defaultTemperature, defaultTopK, maxTopK } = await ai.languageModel.capabilities();
+        if (available !== "no") {
+            this.session = await ai.languageModel.create();
+            const prompt = this.generate_description_prompt(keyword);
+            //this.abortController = new AbortController();
+            const stream = this.session.promptStreaming(prompt);
+            for await (const chunk of stream) {
+                console.log(chunk);
+                this.content_element.innerHTML = marked.parse(chunk);
+            }
+        }
+        this.description_dict[keyword] = this.content_element.innerHTML;
+
+    }
+
+    node_out_listener(circle_element){
+        console.log(circle_element);
+        console.log(d3.select(circle_element));
+
+        //this.box_element.remove();
     }
     initinal_graph() {
         this.isHorizontal = false; // Change this for different layout
@@ -109,12 +202,11 @@ class Graph {
   
         this.node.append("circle")
             .attr("r", d => d.isCentral ? 35 : 20)  // Larger size for central node
-            .on("mouseover", function()
-            {
+            .on("mouseover", function() {
+                
                 d3.select(this).transition().duration(200).attr("r", d => d.isCentral ? 40 : 25); // Can add more staff
             })
-            .on("mouseout", function() 
-            {
+            .on("mouseout", function() {
                 d3.select(this).transition().duration(200).attr("r", d => d.isCentral ? 35 : 20); // Can add more staff
             });
   
@@ -150,11 +242,20 @@ class Graph {
         nodeEnter.append("circle")
             
             .attr("r", d => d.isCentral ? 35 : 20)
-            .on("mouseover", function() {
-                d3.select(this).transition().duration(200).attr("r", d => d.isCentral ? 40 : 25);
+            .on("mouseover", (event, d) => {
+                console.log(this); 
+                this.node_hover_listener(event.currentTarget);
+                d3.select(event.currentTarget) 
+                    .transition()
+                    .duration(200)
+                    .attr("r", d.isCentral ? 40 : 25);
             })
-            .on("mouseout", function() {
-                d3.select(this).transition().duration(200).attr("r", d => d.isCentral ? 35 : 20);
+            .on("mouseout", (event, d) => {
+                this.node_out_listener(event.currentTarget);
+                d3.select(event.currentTarget)
+                    .transition()
+                    .duration(200)
+                    .attr("r", d.isCentral ? 35 : 20);
             })
             ;
         nodeEnter.append("text")

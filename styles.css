@@ -29,6 +29,12 @@ body[data-theme='dark'] svg {
 body[data-theme='light'] svg {
     background-color: #fff;
 }
+body[data-theme='dark'] a{
+    color: #ddd;
+}
+body[data-theme='light'] a{
+    color: #000;
+}
 
 .link {
     stroke-width: 2px;

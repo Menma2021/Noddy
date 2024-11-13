@@ -116,7 +116,10 @@ class Graph {
         this.box_element.classList.add('discription_box');
 
         const title_element=document.createElement('div');
-        title_element.innerHTML=d3.select(circle_element.parentNode).select('text').text();
+        //https://en.wikipedia.org/w/index.php?search=${}&title=Special%3ASearch&ns0=1
+        const title = d3.select(circle_element.parentNode).select('text').text();
+        const link = `https://en.wikipedia.org/w/index.php?search=${title.replace(/ /g, '+')}&title=Special%3ASearch&ns0=1`;
+        title_element.innerHTML = `<a href="${link}" target="_blank">${title}</a>`;
         title_element.style.fontSize = '20px';
         title_element.style.fontWeight = 'bold';
         this.content_element=document.createElement('div');

@@ -130,44 +130,7 @@ class Graph {
         console.log(circle_element);
         console.log(d3.select(circle_element));
     }
-    generate_description_prompt(keyword){
-        console.log(this.data);
 
-        console.log(keyword);
-        
-        const prompt = `
-        My name is Xuanpei Chen, I am a student at the University of California, Los Angeles.
-        I am a software engineer and a data scientist.
-        I am interested in the following keywords:
-        
-        `;
-
-        return prompt;
-    }
-    async generate_description(keyword){
-        if (this.session){
-            this.session.destroy();
-            this.session = null;
-        }
-        if (this.description_dict[keyword]){
-            this.content_element.innerHTML = this.description_dict[keyword];
-            return;
-        }
-
-        const {available, defaultTemperature, defaultTopK, maxTopK } = await ai.languageModel.capabilities();
-        if (available !== "no") {
-            this.session = await ai.languageModel.create();
-            const prompt = this.generate_description_prompt(keyword);
-            //this.abortController = new AbortController();
-            const stream = this.session.promptStreaming(prompt);
-            for await (const chunk of stream) {
-                console.log(chunk);
-                this.content_element.innerHTML = marked.parse(chunk);
-            }
-        }
-        this.description_dict[keyword] = this.content_element.innerHTML;
-
-    }
 
     node_out_listener(circle_element){
         console.log(circle_element);
@@ -399,6 +362,48 @@ print $1L$ ${userInput} $STP$ as the first line!
           };
         return new_data;
     }
+
+    generate_description_prompt(input, currentNode){
+        console.log(this.data);
+
+        const prompt = `Please provide a detailed relationship between ${input} and ${currentNode}`;
+
+        return prompt;
+    }
+    async generate_description(keyword){
+    // Check if the description already exists in the cache
+    if (this.description_dict[keyword]) {
+        this.content_element.innerHTML = this.description_dict[keyword];
+        return;
+    }
+
+    // Set a loading indicator while waiting for the AI response
+    this.content_element.innerHTML = "Loading description...";
+
+
+    const { available } = await ai.languageModel.capabilities();
+    if (available !== "no") {
+        // Initialize session for generating description
+        if (this.session) {
+            this.session.destroy();
+        }
+        this.session = await ai.languageModel.create();
+
+        // Generate the prompt
+        const prompt = this.generate_description_prompt(keyword, this.central_node);
+
+        // Start streaming the AI response
+        const stream = this.session.promptStreaming(prompt);
+        for await (const chunk of stream) {
+            console.log(chunk);
+            // Update the content element as the response streams in
+            this.content_element.innerHTML = marked.parse(chunk);
+        }
+
+        // Cache the description once fully loaded
+        this.description_dict[keyword] = this.content_element.innerHTML;
+    }
+}
 }
 
 

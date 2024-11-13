@@ -65,6 +65,7 @@ class Graph {
         });
         
         this.element.addEventListener("mousedown", (event) => {
+            this.box_element.remove();
             this.is_dragging = true;
             this.mouse_x_temp = event.clientX;
             this.mouse_y_temp = event.clientY;
@@ -100,18 +101,17 @@ class Graph {
         let box_position_x=this.mouse_x_temp+box_offset_x-window.innerWidth*0.2;
         const box_position_y=this.mouse_y_temp-box_offset_y;
         
-        if (box_position_x+window.innerWidth * 0.4>window.innerWidth){
+        if (box_position_x+window.innerWidth * 0.8>window.innerWidth){
             box_position_x=this.mouse_x_temp-box_offset_x-200-window.innerWidth * 0.2;
         }
         
 
         this.box_element = document.createElement('div');
-        this.box_element.style.width = `${window.innerWidth * 0.2}px`;
+        this.box_element.style.width = `${window.innerWidth * 0.4}px`;
         this.box_element.style.height = `${window.innerHeight * 0.4}px`;
         this.box_element.style.position = 'absolute';
         this.box_element.style.left = `${box_position_x}px`;
         this.box_element.style.top = `${box_position_y}px`;
-        this.box_element.style.backgroundColor = 'white';
         this.box_element.style.border = '1px solid black';
         this.box_element.classList.add('discription_box');
 
@@ -362,9 +362,21 @@ print $1L$ ${userInput} $STP$ as the first line!
           };
         return new_data;
     }
-
+    getAncestors(nodeId,ancestors) {
+        
+        for (const link of this.data.links){
+            if (link.target.id === nodeId){
+                ancestors.push(link.source.id);
+                this.getAncestors(link.source.id,ancestors);
+            }
+        }
+       
+    }
     generate_description_prompt(input, currentNode){
-        console.log(this.data);
+        
+        const ancestors = [input];
+        this.getAncestors(input,ancestors);
+        console.log(ancestors);
 
         const prompt = `Please provide a detailed relationship between ${input} and ${currentNode}`;
 

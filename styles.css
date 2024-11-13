@@ -7,7 +7,14 @@ body {
     overflow: hidden;
     flex-direction: row;
 }
-
+#btn{
+    position: absolute;
+    top: 10%;
+    right: 10%;
+    scale: 0.5;
+    
+    
+}
 svg {
     width: 100vw;
     height: 100vh;
@@ -71,8 +78,14 @@ body[data-theme='light'] .node text {
     height: 100%;
     position: relative;
 }
-#navigation_container{
+body[data-theme='light'] #navigation_container{
     background-color: #dfdfdf4e;
+    width: 20%;
+    /* height: 100%; */
+    position: relative;
+}
+body[data-theme='dark'] #navigation_container{
+    background-color: #000000d0;
     width: 20%;
     /* height: 100%; */
     position: relative;
@@ -91,7 +104,7 @@ body[data-theme='light'] .node text {
     overflow: hidden;
 }
 
-.summary_box{
+body[data-theme='light'] .summary_box{
     background-color: #dbdbdb5e;
     width: 70%;
     height: 30%;
@@ -107,9 +120,38 @@ body[data-theme='light'] .node text {
     border-top-right-radius: 10px;
 
 }
-.discription_box{
+body[data-theme='dark'] .summary_box{
+    background-color: #4b4a4a5e;
+    color: #ddd;
+    width: 70%;
+    height: 30%;
+    overflow: scroll;
+    position: absolute;
+    left: 15%;
+    bottom: 0;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-top: 10px;
+    
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+}
+body[data-theme='light'] .discription_box{
+    background-color: #dbdbdb;
     fill: white;
     stroke: black;
+    opacity: 0.9;
+    border-radius: 10px;
+    overflow: scroll;
+    text-align: center;
+    padding: 10px;
+}
+body[data-theme='dark'] .discription_box{
+    background-color: #4b4a4a;
+    fill: black;
+    stroke: white;
+    opacity: 0.9;
+    color: white;
     opacity: 0.9;
     border-radius: 10px;
     overflow: scroll;

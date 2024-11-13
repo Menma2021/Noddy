@@ -2,9 +2,10 @@ body {
     margin: 0;
     padding: 0;
     display: flex;
-    justify-content: center;
-    align-items: center;
+    /* justify-content: center;
+    align-items: center; */
     overflow: hidden;
+    flex-direction: row;
 }
 
 svg {
@@ -31,12 +32,14 @@ body[data-theme='light'] svg {
 .node text {
     font-family: Arial, sans-serif;
     font-size: 14px;
+    z-index: 1000;
     fill: currentColor;
 }
 
 .node circle {
     stroke-width: 2px;
     cursor: pointer;
+    z-index: 500;
     transition: fill 0.3s;
 }
 
@@ -62,16 +65,45 @@ body[data-theme='light'] .node text {
     fill: #474cf1 !important; /* Unique color for the central node */
     stroke: #2329da !important;
 }
-.graph{
+
+#content_container{
     width: 80%;
     height: 100%;
+    position: relative;
+}
+#navigation_container{
+    background-color: #dfdfdf4e;
+    width: 20%;
+    /* height: 100%; */
+    position: relative;
+}
+.main_content{
+    
+    width: 100%;
+    height: 100%;
+    display: flex;
+    position: relative;
+    /* position: absolute; */
+    right: 0;
+}
+.graph{
+    
     overflow: hidden;
 }
+
 .summary_box{
-    width: 80%;
+    background-color: #dbdbdb5e;
+    width: 70%;
     height: 30%;
     overflow: scroll;
     position: absolute;
+    left: 15%;
     bottom: 0;
-    margin-left: 10%;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-top: 10px;
+    
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+
 }

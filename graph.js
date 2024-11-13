@@ -148,21 +148,25 @@ class Graph {
         this.node.exit().remove();
         const nodeEnter = this.node.enter().append("g").attr("class", d => `node ${d.isCentral ? 'central' : ''}`);
         nodeEnter.append("circle")
+            
             .attr("r", d => d.isCentral ? 35 : 20)
             .on("mouseover", function() {
                 d3.select(this).transition().duration(200).attr("r", d => d.isCentral ? 40 : 25);
             })
             .on("mouseout", function() {
                 d3.select(this).transition().duration(200).attr("r", d => d.isCentral ? 35 : 20);
-            });
+            })
+            ;
         nodeEnter.append("text")
             .attr("dy", -40)
             .attr("dx", -40)
             .text(d => d.id);
-        this.node = nodeEnter.merge(this.node);
 
+        this.node = nodeEnter.merge(this.node);
+        
         this.simulation.nodes(newData.nodes);
         this.simulation.force("link").links(newData.links);
+        this.simulation.force("collision", d3.forceCollide().radius(d => d.isCentral ? 50 : 35));
         this.simulation.alpha(1).restart();
     }
 
@@ -213,6 +217,8 @@ When a user searches for a keyword, generate a structured response with the foll
 4. The response should cover multiple levels and contain at least 10 lines.
 
 5. $NL$ and $STP$ are special characters it is important to follow the format strictly don't include any other characters.
+
+6. The structure must only have 1 level 1 node!
 
 Format example:
 $1L$ Main search keyword $STP$

@@ -77,5 +77,5 @@ class MainContent {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    const main_content = new MainContent("University of Manchester");
+    const main_content = new MainContent("WeChat");
 });

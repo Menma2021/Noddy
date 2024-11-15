@@ -28,5 +28,5 @@ class ContentManager{
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const content_manager = new ContentManager("University of Manchester");
+  const content_manager = new ContentManager("Docker");
 });

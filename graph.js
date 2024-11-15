@@ -381,7 +381,12 @@ print $1L$ ${userInput} $STP$ as the first line!
         this.getAncestors(input,ancestors);
         console.log(ancestors);
 
-        const prompt = `Please provide a detailed relationship between ${input} and ${currentNode}`;
+        const prompt = `
+        Here is the information I provided:
+        ${ancestors.reverse().join(' -> ')}
+        Please produce a detailed description of the ${input}
+        
+        `;
 
         return prompt;
     }

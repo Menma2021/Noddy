@@ -136,7 +136,8 @@ class Graph {
     node_click_listener(){
             // New page generation goes here
     }
-    node_hover_listener(circle_element) {
+
+    async node_hover_listener(circle_element) {
         this.box_element.remove();
     
         const navigationContainer = document.getElementById('navigation_container');
@@ -157,7 +158,7 @@ class Graph {
     
         const title_element = document.createElement('div');
         const title = d3.select(circle_element.parentNode).select('text').text();
-        const link = `https://en.wikipedia.org/w/index.php?search=${title.replace(/ /g, '+')}&title=Special%3ASearch&ns0=1`;
+        const link = await this.fetchWikipediaLink(title);
         title_element.innerHTML = `<a href="${link}" target="_blank">${title}</a>`;
         title_element.style.fontSize = '20px';
         title_element.style.fontWeight = 'bold';
@@ -173,6 +174,30 @@ class Graph {
         console.log(d3.select(circle_element));
     }
 
+    async fetchWikipediaLink(title) {
+        const context = this.central_node;
+        const searchQuery = `${title} ${context}`;
+        const apiUrl = `https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&list=search&srsearch=${encodeURIComponent(searchQuery)}`;
+        
+        try {
+            const response = await fetch(apiUrl);
+            const data = await response.json();
+    
+            if (data.query.search.length > 0) {
+                const pageTitle = data.query.search[0].title; // Most relevant page
+                return `https://en.wikipedia.org/wiki/${encodeURIComponent(pageTitle)}`;
+            } 
+            else {
+                // No page found - fallback to what we did before
+                return `https://en.wikipedia.org/w/index.php?search=${encodeURIComponent(title)}&title=Special%3ASearch&ns0=1`;
+            }
+        } 
+        catch (error) {
+            console.error('Error fetching Wikipedia link:', error);
+            // Error - fallback
+            return `https://en.wikipedia.org/w/index.php?search=${encodeURIComponent(title)}&title=Special%3ASearch&ns0=1`;
+        }
+    }
 
     node_out_listener(circle_element){
         console.log(circle_element);

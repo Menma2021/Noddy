@@ -7,10 +7,8 @@ class Graph {
         this.data = {
           nodes: [ // all nodes
               { id: central_node, isCentral: true },
-              
           ],
           links: [ // all nodes connections
-              
           ]
         };
         this.mouse_x_temp = 0;
@@ -28,8 +26,9 @@ class Graph {
             .style("overflow", "scroll");
         this.simulation = d3.forceSimulation(this.data.nodes)
             .force("link", d3.forceLink(this.data.links).id(d => d.id).distance(100))
-            .force("charge", d3.forceManyBody().strength(-500))
-            .force("center", d3.forceCenter(this.width / 2, this.height / 2));
+            .force("charge", d3.forceManyBody(-50000))
+            .force("collision", d3.forceCollide().radius(d => d.isCentral ? 50 : 35))
+            
         this.initinal_listener();
         this.initinal_graph();
         
@@ -39,29 +38,19 @@ class Graph {
 
         this.description_dict={};
 
+        this.node_dragging = false;
         
     }
 
     dragStarted(event, node) {
+        this.node_dragging = true;
         if (!event.active) this.simulation.alphaTarget(0.3).restart();
-    
-        // Remove force for central node
-        if (node.isCentral) {
-            this.simulation.force("center", null);
-        }
-    
-        // Store dragged nodes and children
-        const children = this.getChildren(node.id);
-        this.draggedNodes = new Set([node, ...children]);
-    
         // Lock the dragged nodes
+       
         node.fx = node.x;
         node.fy = node.y;
     
-        this.draggedNodes.forEach(d => {
-            d.fx = d.x;
-            d.fy = d.y;
-        });
+       
     }
     
     
@@ -70,42 +59,17 @@ class Graph {
         const targetY = event.y;
     
         // Smooth node interpolation 
-        node.fx = node.fx + (targetX - node.fx) * 0.1;
-        node.fy = node.fy + (targetY - node.fy) * 0.1;
-    
-        // Children based on parents movement
-        for (const child of this.draggedNodes) {
-            if (child !== node) {
-                const dx = child.x - node.x;
-                const dy = child.y - node.y;
-    
-                // Children interpolation (based on parent's)
-                child.fx = child.fx + ((node.fx + dx) - child.fx) * 0.05;
-                child.fy = child.fy + ((node.fy + dy) - child.fy) * 0.05;
-            }
-        }
+        node.fx += (targetX - node.fx) * 0.1;
+        node.fy += (targetY - node.fy) * 0.1;
+        
     }
     
     
     dragEnded(event, node) {
         if (!event.active) this.simulation.alphaTarget(0);
-    
-        // Restore the center force
-        if (node.isCentral) {
-            this.simulation.force("center", d3.forceCenter(this.width / 2, this.height / 2));
-        }
-    
-        // Restore the positions of the dragged nodes
-        node.fx = null;
+        node.fx =null;
         node.fy = null;
-    
-        for (const child of this.draggedNodes) {
-            child.fx = null;
-            child.fy = null;
-        }
-    
-        //this.simulation.alpha(1).restart();
-        this.draggedNodes = null;
+        this.node_dragging=false;
     }
     
     
@@ -150,7 +114,7 @@ class Graph {
             this.mouse_y_temp = event.clientY;
         });
         this.element.addEventListener("mousemove", (event) => {
-            if (this.is_dragging) {
+            if (this.is_dragging && !this.node_dragging) {
                 const mouse_x_delta = -(event.clientX - this.mouse_x_temp)*this.scale;
                 const mouse_y_delta = -(event.clientY - this.mouse_y_temp)*this.scale;
                 
@@ -224,7 +188,8 @@ class Graph {
                           .force("y", d3.forceY().strength(0.05).y(this.height / 2));
         } else {
             this.simulation.force("x", d3.forceX().strength(0.05).x(this.width / 2))
-                          .force("y", d3.forceY().strength(0.1).y(d => d.isCentral ? this.height * 0.1 : this.height / 2));
+                          .force("y", d3.forceY().strength(0.1).y(d => d.isCentral ? this.height * 0.1 : this.height / 2))
+
         }
   
         this.link = this.svg.append("g")
@@ -302,6 +267,7 @@ class Graph {
                     .duration(200)
                     .attr("r", d.isCentral ? 35 : 20);
             })
+        this.node.select("circle")
             .call(d3.drag()
                 .on("start", (event, d) => this.dragStarted(event, d))
                 .on("drag", (event, d) => this.dragged(event, d))
@@ -313,11 +279,11 @@ class Graph {
             .text(d => d.id);
 
         this.node = nodeEnter.merge(this.node);
-        
         this.simulation.nodes(newData.nodes);
         this.simulation.force("link").links(newData.links);
         this.simulation.force("collision", d3.forceCollide().radius(d => d.isCentral ? 50 : 35));
         this.simulation.alpha(1).restart();
+        
     }
 
     change_size(scale,mouse_x,mouse_y,viewBoxX,viewBoxY,viewBoxWidth,viewBoxHeight) {

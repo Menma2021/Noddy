@@ -46,16 +46,26 @@ class MainContent {
         const nodes = graphData.nodes.map(node => node.id).join(', ');
         const links = graphData.links.map(link => `${link.source.id} -> ${link.target.id}`).join(', ');
 
-        const prompt = `
+        const prompt = /* `
         Summarize the following graph data:
         Nodes: ${nodes}
         Links: ${links}
         Please provide a brief summary of the nodes. Take the first node as the main topic, and trace down to each nodes
+        `; */
+        `
+        Using the data provided below, create a summary of the topic. First node is the main topic. All the links mean that the topics are connected.
+        When generating prompt, don't mention the fact that you are generating data from the graph - write as if you are just responding to basic promt.
+        Additionally, you need to mention all the nodes, however, don't oversaturate answer with a lot of information - keep it brief and general.
+        Here is the data:
+        Nodes: ${nodes}
+        Links: ${links}
         `;
         return prompt;
     }
     async generate_summary(graphData) {
         const {available, defaultTemperature, defaultTopK, maxTopK } = await ai.languageModel.capabilities();
+
+        this.summary_box.innerHTML = "Loading description...";
 
         if (available !== "no") {
             const session = await ai.languageModel.create();

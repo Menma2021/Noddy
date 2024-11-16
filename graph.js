@@ -42,6 +42,85 @@ class Graph {
         
     }
 
+    dragStarted(event, node) {
+        if (!event.active) this.simulation.alphaTarget(0.3).restart();
+    
+        // Remove force for central node
+        if (node.isCentral) {
+            this.simulation.force("center", null);
+        }
+    
+        // Store dragged nodes and children
+        const children = this.getChildren(node.id);
+        this.draggedNodes = new Set([node, ...children]);
+    
+        // Lock the dragged nodes
+        node.fx = node.x;
+        node.fy = node.y;
+    
+        this.draggedNodes.forEach(d => {
+            d.fx = d.x;
+            d.fy = d.y;
+        });
+    }
+    
+    
+    dragged(event, node) {
+        const targetX = event.x;
+        const targetY = event.y;
+    
+        // Smooth node interpolation 
+        node.fx = node.fx + (targetX - node.fx) * 0.1;
+        node.fy = node.fy + (targetY - node.fy) * 0.1;
+    
+        // Children based on parents movement
+        for (const child of this.draggedNodes) {
+            if (child !== node) {
+                const dx = child.x - node.x;
+                const dy = child.y - node.y;
+    
+                // Children interpolation (based on parent's)
+                child.fx = child.fx + ((node.fx + dx) - child.fx) * 0.05;
+                child.fy = child.fy + ((node.fy + dy) - child.fy) * 0.05;
+            }
+        }
+    }
+    
+    
+    dragEnded(event, node) {
+        if (!event.active) this.simulation.alphaTarget(0);
+    
+        // Restore the center force
+        if (node.isCentral) {
+            this.simulation.force("center", d3.forceCenter(this.width / 2, this.height / 2));
+        }
+    
+        // Restore the positions of the dragged nodes
+        node.fx = null;
+        node.fy = null;
+    
+        for (const child of this.draggedNodes) {
+            child.fx = null;
+            child.fy = null;
+        }
+    
+        //this.simulation.alpha(1).restart();
+        this.draggedNodes = null;
+    }
+    
+    
+    
+    getChildren(nodeId) {
+        const children = [];
+        for (const link of this.data.links) {
+            if (link.source.id === nodeId) {
+                children.push(link.target);
+            }
+        }
+        return children;
+    }
+    
+
     initinal_listener() {
         this.element.addEventListener("wheel", (event) => {
     
@@ -91,21 +170,18 @@ class Graph {
     }
 
     node_click_listener(){
-
+            // New page generation goes here
     }
-    node_hover_listener(circle_element){
+    node_hover_listener(circle_element) {
         this.box_element.remove();
-
-        const box_offset_x=100;
-        const box_offset_y=120;
-        let box_position_x=this.mouse_x_temp+box_offset_x-window.innerWidth*0.2;
-        const box_position_y=this.mouse_y_temp-box_offset_y;
-        
-        if (box_position_x+window.innerWidth * 0.8>window.innerWidth){
-            box_position_x=this.mouse_x_temp-box_offset_x-200-window.innerWidth * 0.2;
-        }
-        
-
+    
+        const navigationContainer = document.getElementById('navigation_container');
+        const navBounds = navigationContainer.getBoundingClientRect();
+    
+        const box_position_x = navBounds.right - window.innerWidth * 0.2; // Taking position right on the right
+        const box_position_y = navBounds.top; // Alighning with the top of navigation container
+    
+        // Creating the description box
         this.box_element = document.createElement('div');
         this.box_element.style.width = `${window.innerWidth * 0.4}px`;
         this.box_element.style.height = `${window.innerHeight * 0.4}px`;
@@ -114,22 +190,21 @@ class Graph {
         this.box_element.style.top = `${box_position_y}px`;
         this.box_element.style.border = '1px solid black';
         this.box_element.classList.add('discription_box');
-
-        const title_element=document.createElement('div');
-        //https://en.wikipedia.org/w/index.php?search=${}&title=Special%3ASearch&ns0=1
+    
+        const title_element = document.createElement('div');
         const title = d3.select(circle_element.parentNode).select('text').text();
         const link = `https://en.wikipedia.org/w/index.php?search=${title.replace(/ /g, '+')}&title=Special%3ASearch&ns0=1`;
         title_element.innerHTML = `<a href="${link}" target="_blank">${title}</a>`;
         title_element.style.fontSize = '20px';
         title_element.style.fontWeight = 'bold';
-        this.content_element=document.createElement('div');
+    
+        this.content_element = document.createElement('div');
         this.box_element.appendChild(title_element);
         this.box_element.appendChild(this.content_element);
+    
         this.main_content.element.appendChild(this.box_element);
-
-        this.generate_description(title_element.innerHTML,this.content_element);
-
-
+        this.generate_description(title_element.innerHTML, this.content_element);
+    
         console.log(circle_element);
         console.log(d3.select(circle_element));
     }
@@ -174,7 +249,11 @@ class Graph {
             })
             .on("mouseout", function() {
                 d3.select(this).transition().duration(200).attr("r", d => d.isCentral ? 35 : 20); // Can add more staff
-            });
+            })
+            .call(d3.drag()
+                .on("start", (event, d) => this.dragStarted(event, d))
+                .on("drag", (event, d) => this.dragged(event, d))
+                .on("end", (event, d) => this.dragEnded(event, d)));
   
         this.node.append("text")
             .attr("dy", -40)
@@ -223,7 +302,11 @@ class Graph {
                     .duration(200)
                     .attr("r", d.isCentral ? 35 : 20);
             })
-            ;
+            .call(d3.drag()
+                .on("start", (event, d) => this.dragStarted(event, d))
+                .on("drag", (event, d) => this.dragged(event, d))
+                .on("end", (event, d) => this.dragEnded(event, d)));
+
         nodeEnter.append("text")
             .attr("dy", -40)
             .attr("dx", -40)
@@ -425,5 +508,3 @@ print $1L$ ${userInput} $STP$ as the first line!
     }
 }
 }
-
-

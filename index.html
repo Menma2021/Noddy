@@ -40,6 +40,17 @@
             document.body.dataset.theme = "light";
         }
       });
+
+      // For testing, can be deleted if I pushed it and forgot to delet before that
+      document.addEventListener('DOMContentLoaded', () => {
+            const navigationContainer = document.getElementById('navigation_container');
+            if (navigationContainer) {
+                const navBounds = navigationContainer.getBoundingClientRect();
+                console.log(navBounds);
+            } else {
+                console.error('navigation_container element not found.');
+            }
+        });
     </script>
     
     

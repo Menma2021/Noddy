@@ -1,7 +1,8 @@
 
 document.body.dataset.theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 class Graph {
-    constructor(element,central_node,main_content) {
+    constructor(element, central_node, main_content) {
+        // Initialize the graph with a central node and main content
         this.central_node = central_node;
         this.main_content = main_content;
         this.data = {
@@ -14,46 +15,50 @@ class Graph {
         this.mouse_x_temp = 0;
         this.mouse_y_temp = 0;
         
+        // Set up dimensions and scaling
         this.width = window.innerWidth;
         this.height = window.innerHeight;
         this.scale = 1;
         this.mouse_move_speed = 0.01;
         this.element = element;
+
+        // Create SVG element
         this.svg = d3.select(element)
             .append("svg")
             .attr("width", this.width)
             .attr("height", this.height)
             .style("overflow", "scroll");
+
+        // Initialize force simulation
         this.simulation = d3.forceSimulation(this.data.nodes)
             .force("link", d3.forceLink(this.data.links).id(d => d.id).distance(100))
-            .force("charge", d3.forceManyBody(-50000))
-            .force("collision", d3.forceCollide().radius(d => d.isCentral ? 50 : 35))
-            
+            .force("charge", d3.forceManyBody(-2000))
+            .force("collision", d3.forceCollide().radius(d => d.isCentral ? 100 : 75).strength(0.1))
+            //.force("center", d3.forceCenter(this.width / 2, this.height / 2)); 
+        
+
         this.initinal_listener();
         this.initinal_graph();
         
         this.svg.attr("viewBox", `${0} ${0} ${this.width} ${this.height}`);
 
-        this.box_element=document.createElement('div');
+        this.box_element = document.createElement('div');
 
-        this.description_dict={};
+        this.description_dict = {};
 
         this.node_dragging = false;
-        
     }
 
+    // Handle the start of node dragging
     dragStarted(event, node) {
         this.node_dragging = true;
-        if (!event.active) this.simulation.alphaTarget(0.3).restart();
+        if (!event.active) this.simulation.alphaTarget(0.1).restart();
         // Lock the dragged nodes
-       
         node.fx = node.x;
         node.fy = node.y;
-    
-       
     }
     
-    
+    // Handle node dragging
     dragged(event, node) {
         const targetX = event.x;
         const targetY = event.y;
@@ -61,19 +66,17 @@ class Graph {
         // Smooth node interpolation 
         node.fx += (targetX - node.fx) * 0.1;
         node.fy += (targetY - node.fy) * 0.1;
-        
     }
     
-    
+    // Handle the end of node dragging
     dragEnded(event, node) {
         if (!event.active) this.simulation.alphaTarget(0);
-        node.fx =null;
+        node.fx = null;
         node.fy = null;
-        this.node_dragging=false;
+        this.node_dragging = false;
     }
     
-    
-    
+    // Get children nodes of a given node
     getChildren(nodeId) {
         const children = [];
         for (const link of this.data.links) {
@@ -84,10 +87,10 @@ class Graph {
         return children;
     }
     
-
+    // Initialize event listeners
     initinal_listener() {
+        // Zoom functionality
         this.element.addEventListener("wheel", (event) => {
-    
             const delta = event.deltaY/100;
             const min_scale = 0.5;
             const newScale = Math.max(min_scale, this.scale + delta);
@@ -107,6 +110,7 @@ class Graph {
             this.change_size(newScale,mouse_x_viewbox,mouse_y_viewbox ,viewBoxX,viewBoxY,viewBoxWidth,viewBoxHeight);
         });
         
+        // Pan functionality
         this.element.addEventListener("mousedown", (event) => {
             this.box_element.remove();
             this.is_dragging = true;
@@ -137,43 +141,61 @@ class Graph {
             // New page generation goes here
     }
 
+    // Handle node hover events
     async node_hover_listener(circle_element) {
-        this.box_element.remove();
-    
-        const navigationContainer = document.getElementById('navigation_container');
-        const navBounds = navigationContainer.getBoundingClientRect();
-    
-        const box_position_x = navBounds.right - window.innerWidth * 0.2; // Taking position right on the right
-        const box_position_y = navBounds.top; // Alighning with the top of navigation container
-    
-        // Creating the description box
-        this.box_element = document.createElement('div');
-        this.box_element.style.width = `${window.innerWidth * 0.4}px`;
-        this.box_element.style.height = `${window.innerHeight * 0.4}px`;
-        this.box_element.style.position = 'absolute';
-        this.box_element.style.left = `${box_position_x}px`;
-        this.box_element.style.top = `${box_position_y}px`;
-        this.box_element.style.border = '1px solid black';
-        this.box_element.classList.add('discription_box');
-    
-        const title_element = document.createElement('div');
-        const title = d3.select(circle_element.parentNode).select('text').text();
-        const link = await this.fetchWikipediaLink(title);
-        title_element.innerHTML = `<a href="${link}" target="_blank">${title}</a>`;
-        title_element.style.fontSize = '20px';
-        title_element.style.fontWeight = 'bold';
-    
-        this.content_element = document.createElement('div');
-        this.box_element.appendChild(title_element);
-        this.box_element.appendChild(this.content_element);
-    
-        this.main_content.element.appendChild(this.box_element);
-        this.generate_description(title_element.innerHTML, this.content_element);
-    
-        console.log(circle_element);
-        console.log(d3.select(circle_element));
+        // delay timer
+        let signal = false;
+        
+        // mouse enter event
+        circle_element.addEventListener('mouseenter', () => {
+            setTimeout(async () => {
+                if (signal){
+                    return;
+                }
+                    this.box_element.remove();
+        
+                    const navigationContainer = document.getElementById('navigation_container');
+                    const navBounds = navigationContainer.getBoundingClientRect();
+        
+                    const box_position_x = navBounds.right - window.innerWidth * 0.2; // Taking position right on the right
+                    const box_position_y = navBounds.top; // Alighning with the top of navigation container
+        
+                    // Creating the description box
+                    this.box_element = document.createElement('div');
+                    this.box_element.style.width = `${window.innerWidth * 0.4}px`;
+                    this.box_element.style.height = `${window.innerHeight * 0.4}px`;
+                    this.box_element.style.position = 'absolute';
+                    this.box_element.style.left = `${box_position_x}px`;
+                    this.box_element.style.top = `${box_position_y}px`;
+                    this.box_element.style.border = '1px solid black';
+                    this.box_element.classList.add('discription_box');
+        
+                    const title_element = document.createElement('div');
+                    const title = d3.select(circle_element.parentNode).select('text').text();
+                    const link = await this.fetchWikipediaLink(title);
+                    title_element.innerHTML = `<a href="${link}" target="_blank">${title}</a>`;
+                    title_element.style.fontSize = '20px';
+                    title_element.style.fontWeight = 'bold';
+        
+                    this.content_element = document.createElement('div');
+                    this.box_element.appendChild(title_element);
+                    this.box_element.appendChild(this.content_element);
+        
+                    this.main_content.element.appendChild(this.box_element);
+                    this.generate_description(title_element.innerHTML, this.content_element);
+        
+                    console.log(circle_element);
+                    console.log(d3.select(circle_element));
+            }, 2000);
+        });
+            
+        // mouse leave event
+        circle_element.addEventListener('mouseleave', () => {
+            signal = true;
+        });
     }
 
+    // Fetch Wikipedia link for a given title
     async fetchWikipediaLink(title) {
         const context = this.central_node;
         const searchQuery = `${title} ${context}`;
@@ -205,6 +227,8 @@ class Graph {
 
         //this.box_element.remove();
     }
+
+    // Initialize the graph
     initinal_graph() {
         this.isHorizontal = false; // Change this for different layout
 
@@ -213,10 +237,11 @@ class Graph {
                           .force("y", d3.forceY().strength(0.05).y(this.height / 2));
         } else {
             this.simulation.force("x", d3.forceX().strength(0.05).x(this.width / 2))
-                          .force("y", d3.forceY().strength(0.1).y(d => d.isCentral ? this.height * 0.1 : this.height / 2))
+                          .force("y", d3.forceY().strength(0.01).y(d => d.isCentral ? this.height * 0.1 : this.height / 2))
 
         }
   
+        // Create links
         this.link = this.svg.append("g")
             .attr("class", "links")
             .selectAll("line")
@@ -224,6 +249,7 @@ class Graph {
             .enter().append("line")
             .attr("class", "link");
   
+        // Create nodes
         this.node = this.svg.append("g")
             .attr("class", "nodes")
             .selectAll("g")
@@ -231,10 +257,10 @@ class Graph {
             .enter().append("g")
             .attr("class", d => `node ${d.isCentral ? 'central' : ''}`);
   
+        // Add circles to nodes
         this.node.append("circle")
             .attr("r", d => d.isCentral ? 35 : 20)  // Larger size for central node
             .on("mouseover", function() {
-                
                 d3.select(this).transition().duration(200).attr("r", d => d.isCentral ? 40 : 25); // Can add more staff
             })
             .on("mouseout", function() {
@@ -245,11 +271,13 @@ class Graph {
                 .on("drag", (event, d) => this.dragged(event, d))
                 .on("end", (event, d) => this.dragEnded(event, d)));
   
+        // Add text labels to nodes
         this.node.append("text")
             .attr("dy", -40)
             .attr("dx", -40)
             .text(d => d.id);
   
+        // Update positions on each tick of the simulation
         this.simulation.on("tick", () => {
             this.link
                 .attr("x1", d => d.source.x)
@@ -262,20 +290,34 @@ class Graph {
         });
     }
 
+    // Update the graph with new data
     updateGraph(newData) {
+        if (JSON.stringify(newData) === JSON.stringify(this.data)) {
+            return;
+        }
+        const nodesById = new Map(this.data.nodes.map(d => [d.id, d]));
+        newData.nodes.forEach(node => {
+            const existingNode = nodesById.get(node.id);
+            if (existingNode) {
+                node.x = existingNode.x;
+                node.y = existingNode.y;
+            } else {
+                node.x = this.width / 2;
+                node.y = this.height / 2;
+            }
+        });
         this.data = newData;
 
-        
+        // Update links
         this.link = this.link.data(newData.links);
         this.link.exit().remove();
         this.link = this.link.enter().append("line").attr("class", "link").merge(this.link);
 
-        
+        // Update nodes
         this.node = this.node.data(newData.nodes);
         this.node.exit().remove();
         const nodeEnter = this.node.enter().append("g").attr("class", d => `node ${d.isCentral ? 'central' : ''}`);
         nodeEnter.append("circle")
-            
             .attr("r", d => d.isCentral ? 35 : 20)
             .on("mouseover", (event, d) => {
                 console.log(this); 
@@ -306,14 +348,12 @@ class Graph {
         this.node = nodeEnter.merge(this.node);
         this.simulation.nodes(newData.nodes);
         this.simulation.force("link").links(newData.links);
-        this.simulation.force("collision", d3.forceCollide().radius(d => d.isCentral ? 50 : 35));
+        //this.simulation.force("collision", d3.forceCollide().radius(d => d.isCentral ? 50 : 35));
         this.simulation.alpha(1).restart();
-        
     }
 
-    change_size(scale,mouse_x,mouse_y,viewBoxX,viewBoxY,viewBoxWidth,viewBoxHeight) {
-        
-       
+    // Change the size of the graph
+    change_size(scale, mouse_x, mouse_y, viewBoxX, viewBoxY, viewBoxWidth, viewBoxHeight) {
         const corners = [
             [viewBoxX, viewBoxY],
             [viewBoxX + viewBoxWidth, viewBoxY],
@@ -328,22 +368,22 @@ class Graph {
             new_corners.push([newX, newY]);
         }
 
-        
         this.scale = scale;
         
         this.svg.attr("viewBox", `${new_corners[0][0]} ${new_corners[0][1]} ${new_corners[3][0]-new_corners[0][0]} ${new_corners[3][1]-new_corners[0][1]}`);
     }
+
+    // Get graph data from AI
     async get_graph_data() {
         const {available, defaultTemperature, defaultTopK, maxTopK } = await ai.languageModel.capabilities();
 
         if (available !== "no") {
             const session = await ai.languageModel.create();
 
-    // Prompt the model and stream the result:
+            // Prompt the model and stream the result:
+            const userInput = this.central_node;
 
-        const userInput = this.central_node;
-
-        const prompt = `
+            const prompt = `
 When a user searches for a keyword, generate a structured response with the following requirements:
 
 1. Each line must strictly follow this format: $NL$ ? $STP$, where:
@@ -393,20 +433,22 @@ Now User input: ${userInput}
 print $1L$ ${userInput} $STP$ as the first line!
 `;
 
-        const stream = session.promptStreaming(prompt);
-        for await (const chunk of stream) {
-            console.log(chunk);
-            const new_data = this.transform_data(chunk);
-            this.updateGraph(new_data);
+            const stream = session.promptStreaming(prompt);
+            for await (const chunk of stream) {
+                console.log(chunk);
+                const new_data = this.transform_data(chunk);
+                this.updateGraph(new_data);
             }
         }
     }
 
+    // Transform AI response into graph data
     transform_data(input) {
-        const nodePattern = /\$?\d+L\$? (.*?) \$?[^a-zA-Z0-9]?STP\$?/g; /*To explain this gibberish: /.../g - start and end of the pattern. 
-            \$? looks for $, but makes "$" optional. \d+ looks for a number (d is for digit, + means that there can be more than one digits)
-            (.*?) - basically, .* will include any characters that are not white spaces after first part. To make it not include stop sign, 
-            ? makes it so that it included as small as possible. The last part is self explanatory */
+        const nodePattern = /\$?\d+L\$? (.*?) \$?[^a-zA-Z0-9]?STP\$?/g;/*To explain this gibberish: /.../g - start and end of the pattern. 
+        \$? looks for $, but makes "$" optional. \d+ looks for a number (d is for digit, + means that there can be more than one digits)
+        (.*?) - basically, .* will include any characters that are not white spaces after first part. To make it not include stop sign, 
+        ? makes it so that it included as small as possible. The last part is self explanatory */
+        
         const nodes = [];
         const links = [];
         const nodeLayers = {};
@@ -436,23 +478,24 @@ print $1L$ ${userInput} $STP$ as the first line!
 
         const new_data = {
             nodes, links
-          };
+        };
         return new_data;
     }
-    getAncestors(nodeId,ancestors) {
-        
+
+    // Get ancestors of a node
+    getAncestors(nodeId, ancestors) {
         for (const link of this.data.links){
             if (link.target.id === nodeId){
                 ancestors.push(link.source.id);
-                this.getAncestors(link.source.id,ancestors);
+                this.getAncestors(link.source.id, ancestors);
             }
         }
-       
     }
+
+    // Generate description prompt for AI
     generate_description_prompt(input, currentNode){
-        
         const ancestors = [input];
-        this.getAncestors(input,ancestors);
+        this.getAncestors(input, ancestors);
         console.log(ancestors);
 
         const prompt = `
@@ -464,38 +507,39 @@ print $1L$ ${userInput} $STP$ as the first line!
 
         return prompt;
     }
+
+    // Generate description for a keyword
     async generate_description(keyword){
-    // Check if the description already exists in the cache
-    if (this.description_dict[keyword]) {
-        this.content_element.innerHTML = this.description_dict[keyword];
-        return;
-    }
-
-    // Set a loading indicator while waiting for the AI response
-    this.content_element.innerHTML = "Loading description...";
-
-
-    const { available } = await ai.languageModel.capabilities();
-    if (available !== "no") {
-        // Initialize session for generating description
-        if (this.session) {
-            this.session.destroy();
-        }
-        this.session = await ai.languageModel.create();
-
-        // Generate the prompt
-        const prompt = this.generate_description_prompt(keyword, this.central_node);
-
-        // Start streaming the AI response
-        const stream = this.session.promptStreaming(prompt);
-        for await (const chunk of stream) {
-            console.log(chunk);
-            // Update the content element as the response streams in
-            this.content_element.innerHTML = marked.parse(chunk);
+        // Check if the description already exists in the cache
+        if (this.description_dict[keyword]) {
+            this.content_element.innerHTML = this.description_dict[keyword];
+            return;
         }
 
-        // Cache the description once fully loaded
-        this.description_dict[keyword] = this.content_element.innerHTML;
+        // Set a loading indicator while waiting for the AI response
+        this.content_element.innerHTML = "Loading description...";
+
+        const { available } = await ai.languageModel.capabilities();
+        if (available !== "no") {
+            // Initialize session for generating description
+            if (this.session) {
+                this.session.destroy();
+            }
+            this.session = await ai.languageModel.create();
+
+            // Generate the prompt
+            const prompt = this.generate_description_prompt(keyword, this.central_node);
+
+            // Start streaming the AI response
+            const stream = this.session.promptStreaming(prompt);
+            for await (const chunk of stream) {
+                console.log(chunk);
+                // Update the content element as the response streams in
+                this.content_element.innerHTML = marked.parse(chunk);
+            }
+
+            // Cache the description once fully loaded
+            this.description_dict[keyword] = this.content_element.innerHTML;
+        }
     }
-}
 }

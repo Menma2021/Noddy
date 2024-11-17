@@ -27,6 +27,29 @@ class ContentManager{
     }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  const content_manager = new ContentManager("Docker");
+
+btn.addEventListener("change", e => {
+    if (e.detail === 'dark') {
+        document.body.dataset.theme = "dark";
+    }
+    else {
+        document.body.dataset.theme = "light";
+    }
 });
+
+// For testing, can be deleted if I pushed it and forgot to delet before that
+document.addEventListener('DOMContentLoaded', () => {
+    const navigationContainer = document.getElementById('navigation_container');
+    if (navigationContainer) {
+        const navBounds = navigationContainer.getBoundingClientRect();
+        console.log(navBounds);
+    } else {
+        console.error('navigation_container element not found.');
+    }
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const data = urlParams.get('data') || 'Node Tree';
+    const content_manager = new ContentManager(data);
+  });

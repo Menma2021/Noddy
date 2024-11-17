@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Knowledge Graph</title>
     <link rel="stylesheet" href="styles.css">
-    <script src="https://cdn.jsdelivr.net/npm/marked@4.0.10/marked.min.js"></script>
-    <script src="https://d3js.org/d3.v7.min.js" defer></script> <!-- Load d3.js beforehand -->
+    <script src="marked.min.js"></script>
+    <script src="d3.v7.min.js" defer></script> <!-- Load d3.js beforehand -->
     <script src="graph.js" defer></script>
     <script src="main_content.js" defer></script>
     <script src="content_manager.js" defer></script>
@@ -31,27 +31,7 @@
         
     </div>
     <theme-button value="dark" id="btn" size="3"></theme-button>
-    <script>
-      btn.addEventListener("change", e => {
-        if (e.detail === 'dark') {
-            document.body.dataset.theme = "dark";
-        }
-        else {
-            document.body.dataset.theme = "light";
-        }
-      });
-
-      // For testing, can be deleted if I pushed it and forgot to delet before that
-      document.addEventListener('DOMContentLoaded', () => {
-            const navigationContainer = document.getElementById('navigation_container');
-            if (navigationContainer) {
-                const navBounds = navigationContainer.getBoundingClientRect();
-                console.log(navBounds);
-            } else {
-                console.error('navigation_container element not found.');
-            }
-        });
-    </script>
+    
     
     
 </body>

@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "My Chrome Extension",
+  "version": "1.0",
+  "description": "This is a demo Chrome extension.",
+  "permissions": ["tabs", "activeTab", "scripting", "webNavigation"],
+  "host_permissions": ["https://*/*", "http://*/*"],
+  "background": {
+    "service_worker": "plugin/background.js"
+  },
+  "action": {
+    "default_popup": "plugin/popup.html",
+    "default_icon": "plugin/icon.png"
+  },
+  
+  "content_scripts": [
+    {
+      "matches": ["https://*/*"],
+      "js": ["plugin/content.js"]
+    }
+  ]
+}

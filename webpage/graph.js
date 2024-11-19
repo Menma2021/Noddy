@@ -1,10 +1,11 @@
 
 document.body.dataset.theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 class Graph {
-    constructor(element, central_node, main_content) {
+    constructor(element, central_node, main_content,content_manager) {
         // Initialize the graph with a central node and main content
         this.central_node = central_node;
         this.main_content = main_content;
+        this.content_manager = content_manager;
         this.data = {
           nodes: [ // all nodes
               { id: central_node, isCentral: true },
@@ -12,6 +13,7 @@ class Graph {
           links: [ // all nodes connections
           ]
         };
+        
         this.mouse_x_temp = 0;
         this.mouse_y_temp = 0;
         
@@ -47,6 +49,8 @@ class Graph {
         this.description_dict = {};
 
         this.node_dragging = false;
+
+
     }
 
     // Handle the start of node dragging
@@ -137,8 +141,15 @@ class Graph {
         });
     }
 
-    node_click_listener(){
-            // New page generation goes here
+    node_click_listener(circle_element){
+        // New page generation goes here
+        const text=d3.select(circle_element.parentNode).select('text').text();
+        let ancestors = [text];
+        this.getAncestors(text, ancestors);
+        const root = ancestors.pop(0);
+        
+        const additional_data = `${ancestors.reverse().join(' -> ')}`;
+        this.content_manager.generate_content(text,additional_data);
     }
 
     // Handle node hover events
@@ -334,6 +345,9 @@ class Graph {
                     .duration(200)
                     .attr("r", d.isCentral ? 35 : 20);
             })
+            .on("click", (event, d) => {
+                this.node_click_listener(event.currentTarget);
+            });
         this.node.select("circle")
             .call(d3.drag()
                 .on("start", (event, d) => this.dragStarted(event, d))
@@ -374,15 +388,19 @@ class Graph {
     }
 
     // Get graph data from AI
-    async get_graph_data() {
+    async get_graph_data(additional_data="") {
         const {available, defaultTemperature, defaultTopK, maxTopK } = await ai.languageModel.capabilities();
 
         if (available !== "no") {
             const session = await ai.languageModel.create();
+            this.main_content.sessions.push(session);
 
             // Prompt the model and stream the result:
             const userInput = this.central_node;
-
+            let additional_data_prompt = "";
+            if (additional_data !== ""){
+                additional_data_prompt = `Here is the additional information: ${additional_data}`;
+            }
             const prompt = `
 When a user searches for a keyword, generate a structured response with the following requirements:
 
@@ -429,13 +447,14 @@ $4L$ Priority $STP$
 
 
 Ensure every line follows the exact format, with both $NL$ and $STP$ ($NL$ and $STP$ are special characters it is important to follow the format strictly don't include any other characters), and that there must be at least 10 lines!!!
+${additional_data_prompt}
 Now User input: ${userInput} 
 print $1L$ ${userInput} $STP$ as the first line!
 `;
 
             const stream = session.promptStreaming(prompt);
             for await (const chunk of stream) {
-                console.log(chunk);
+                //console.log(chunk);
                 const new_data = this.transform_data(chunk);
                 this.updateGraph(new_data);
             }
@@ -444,9 +463,8 @@ print $1L$ ${userInput} $STP$ as the first line!
 
     // Transform AI response into graph data
     transform_data(input) {
-        const nodePattern = /\$?\d+L\$? (.*?) \$?[^a-zA-Z0-9]?STP\$?/g;/*To explain this gibberish: /.../g - start and end of the pattern. 
-        \$? looks for $, but makes "$" optional. \d+ looks for a number (d is for digit, + means that there can be more than one digits)
-        (.*?) - basically, .* will include any characters that are not white spaces after first part. To make it not include stop sign, 
+        const nodePattern = /[}$>\[]?\d+L[}$>\[]? (.*?) [}$>\[]?[^a-zA-Z0-9]?STP[}$>\[]?/g;/*To explain this gibberish: /.../g - start and end of the pattern. 
+        [}$>\[]? looks for $, >, >, [, ]. (.*?) - basically, .* will include any characters that are not white spaces after first part. To make it not include stop sign, 
         ? makes it so that it included as small as possible. The last part is self explanatory */
         
         const nodes = [];
@@ -485,9 +503,15 @@ print $1L$ ${userInput} $STP$ as the first line!
     // Get ancestors of a node
     getAncestors(nodeId, ancestors) {
         for (const link of this.data.links){
-            if (link.target.id === nodeId){
+
+            if (link.target.id === nodeId && ancestors.indexOf(link.source.id) === -1){
+                
                 ancestors.push(link.source.id);
+                if (link.source.id == this.central_node){
+                    return;
+                }
                 this.getAncestors(link.source.id, ancestors);
+                
             }
         }
     }
@@ -502,7 +526,6 @@ print $1L$ ${userInput} $STP$ as the first line!
         Here is the information I provided:
         ${ancestors.reverse().join(' -> ')}
         Please produce a detailed description of the ${input}
-        
         `;
 
         return prompt;
@@ -526,6 +549,7 @@ print $1L$ ${userInput} $STP$ as the first line!
                 this.session.destroy();
             }
             this.session = await ai.languageModel.create();
+            this.main_content.sessions.push(this.session);
 
             // Generate the prompt
             const prompt = this.generate_description_prompt(keyword, this.central_node);

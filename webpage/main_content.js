@@ -7,31 +7,37 @@ Xuanpei Chen 2024/11/11
 */
 
 class MainContent {
-    constructor(key_data) {
+    constructor(key_data,content_manager,additional_data="") {
+        this.key_data = key_data;
+        this.additional_data = additional_data;
+        this.content_manager = content_manager;
         this.element = document.createElement('div');
         this.element.classList.add('main_content');//if want to hidden, use hidden_content
-        this.initinal_graph(key_data);
+        this.initinal_graph(key_data,additional_data);
         this.initinal_summary_box();
-        const content_container = document.getElementById('content_container');
-        content_container.appendChild(this.element);
+        this.content_container = document.getElementById('content_container');
+        this.content_container.appendChild(this.element);
         
-        this.start_generate_graph();
+        this.start_generate_graph(additional_data);
+
+        this.sessions = [];
+
     }
 
     initinal_graph(key_data){
         this.element_graph = document.createElement('div');
         this.element_graph.classList.add('graph');
         this.element.appendChild(this.element_graph);
-        this.graph = new Graph(this.element_graph,key_data,this);
+        this.graph = new Graph(this.element_graph,key_data,this,this.content_manager);
     }
     initinal_summary_box(){
         this.summary_box = document.createElement('div');
         this.summary_box.classList.add('summary_box');
         this.element.appendChild(this.summary_box);
     }
-    async start_generate_graph() {
+    async start_generate_graph(additional_data) {
         // Generate graph data asynchronously
-        await this.graph.get_graph_data();
+        await this.graph.get_graph_data(additional_data);
 
         const graphData = this.graph.data; // Make sure graphData is available here
         if (graphData) {
@@ -69,21 +75,41 @@ class MainContent {
 
         if (available !== "no") {
             const session = await ai.languageModel.create();
-          
+            this.sessions.push(session);
             // Prompt the model and stream the result:
 
             const prompt = this.generate_summary_prompt(graphData);
-            console.log('Summary Prompt:', prompt);
+            //console.log('Summary Prompt:', prompt);
             
             // Send the prompt to the AI and stream the result            
             const stream = session.promptStreaming(prompt);
             for await (const chunk of stream) {
-                console.log(chunk);
+                //console.log(chunk);
                 // Insert the summary into the summary_box container on the HTML page
                 this.summary_box.innerHTML = marked.parse(chunk);
                 
             }
         }
+    }
+
+    hide_content(){
+        this.element.classList.add('hidden_content');
+    }
+    show_content(){
+        this.element.classList.remove('hidden_content');
+    }
+    destroy_content(){
+        this.content_container.removeChild(this.element);
+        this.destroy_sessions();
+    }
+    destroy_sessions(){
+        this.sessions.forEach(session => {
+            try{
+                session.destroy();
+            }catch(e){
+                console.log(e);
+            }
+        });
     }
 }
 

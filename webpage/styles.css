@@ -262,11 +262,15 @@ input {
     width: 200px;
     padding: 10px;
     font-size: 16px;
+    left: 22%;
     border: 1px solid #ccc;
     border-radius: 5px;
     box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
     background-color: white;
     color: #333;
+}
+#add_button{
+    left: 22%;
 }
 #navigation_button_container{
     height: 100%;

@@ -14,7 +14,7 @@ class AddButton {
         // Button position
         this.button.style.position = 'absolute';
         this.button.style.top = `${navBounds.top + 10}px`; // Adjust the top position as needed
-        this.button.style.left = `${navBounds.right + 10}px`; // Adjust the left position as needed
+        //this.button.style.left = `${navBounds.right + 10}px`; // Adjust the left position as needed
         this.button.style.zIndex = '1000'; // Ensure it's on top of other elements
 
         // Append button to the body
@@ -27,7 +27,7 @@ class AddButton {
         this.inputField.style.position = 'absolute';
         this.inputField.style.display = 'none'; // Initially hidden
         this.inputField.style.top = `${navBounds.top + 60}px`; // Position it below the button
-        this.inputField.style.left = `${navBounds.right + 10}px`;
+        //this.inputField.style.left = `${navBounds.right + 10}px`;
         this.inputField.style.zIndex = '1000'; // Ensure it's on top
         document.body.appendChild(this.inputField);
 

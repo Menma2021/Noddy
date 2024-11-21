@@ -103,4 +103,5 @@ document.addEventListener("DOMContentLoaded", () => {
     const urlParams = new URLSearchParams(window.location.search);
     const data = urlParams.get('data') || 'Node Tree';
     const content_manager = new ContentManager(data);
+    new AddButton(content_manager);
   });

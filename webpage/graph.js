@@ -517,7 +517,7 @@ print $1L$ ${userInput} $STP$ as the first line!
     }
 
     // Generate description prompt for AI
-    generate_description_prompt(input, currentNode){
+    generate_description_prompt(input){
         const ancestors = [input];
         this.getAncestors(input, ancestors);
         console.log(ancestors);
@@ -552,7 +552,7 @@ print $1L$ ${userInput} $STP$ as the first line!
             this.main_content.sessions.push(this.session);
 
             // Generate the prompt
-            const prompt = this.generate_description_prompt(keyword, this.central_node);
+            const prompt = this.generate_description_prompt(keyword);
 
             // Start streaming the AI response
             const stream = this.session.promptStreaming(prompt);

@@ -41,17 +41,20 @@ class MainContent {
 
         const graphData = this.graph.data; // Make sure graphData is available here
         if (graphData) {
-            await this.generate_summary(graphData);  // Pass the graph data to the summary generation
+            await this.generate_summary(graphData,additional_data);  // Pass the graph data to the summary generation
         } else {
             console.log("Graph data is not available.");
         }
     }
 
-    generate_summary_prompt(graphData){
+    generate_summary_prompt(graphData,additional_data){
         // Create a prompt to generate the summary based on the graph data
         const nodes = graphData.nodes.map(node => node.id).join(', ');
         const links = graphData.links.map(link => `${link.source.id} -> ${link.target.id}`).join(', ');
-
+        let additional_data_prompt = "";
+        if (additional_data !== ""){
+            additional_data_prompt = `Here is the additional information: ${additional_data}`;
+        }
         const prompt = /* `
         Summarize the following graph data:
         Nodes: ${nodes}
@@ -59,16 +62,18 @@ class MainContent {
         Please provide a brief summary of the nodes. Take the first node as the main topic, and trace down to each nodes
         `; */
         `
+        
         Using the data provided below, create a summary of the topic. First node is the main topic. All the links mean that the topics are connected.
         When generating prompt, don't mention the fact that you are generating data from the graph - write as if you are just responding to basic promt.
         Additionally, you need to mention all the nodes, however, don't oversaturate answer with a lot of information - keep it brief and general.
-        Here is the data:
+        ${additional_data_prompt}
+        Here is the main data:
         Nodes: ${nodes}
         Links: ${links}
         `;
         return prompt;
     }
-    async generate_summary(graphData) {
+    async generate_summary(graphData,additional_data) {
         const {available, defaultTemperature, defaultTopK, maxTopK } = await ai.languageModel.capabilities();
 
         this.summary_box.innerHTML = "Loading description...";
@@ -78,7 +83,7 @@ class MainContent {
             this.sessions.push(session);
             // Prompt the model and stream the result:
 
-            const prompt = this.generate_summary_prompt(graphData);
+            const prompt = this.generate_summary_prompt(graphData,additional_data);
             //console.log('Summary Prompt:', prompt);
             
             // Send the prompt to the AI and stream the result            

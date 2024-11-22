@@ -193,7 +193,7 @@ class Graph {
                     this.box_element.appendChild(this.content_element);
         
                     this.main_content.element.appendChild(this.box_element);
-                    this.generate_description(title_element.innerHTML, this.content_element);
+                    this.generate_description(title, this.content_element);
         
                     console.log(circle_element);
                     console.log(d3.select(circle_element));
@@ -389,6 +389,7 @@ class Graph {
 
     // Get graph data from AI
     async get_graph_data(additional_data="") {
+        this.additional_data = additional_data;
         const {available, defaultTemperature, defaultTopK, maxTopK } = await ai.languageModel.capabilities();
 
         if (available !== "no") {
@@ -451,7 +452,7 @@ ${additional_data_prompt}
 Now User input: ${userInput} 
 print $1L$ ${userInput} $STP$ as the first line!
 `;
-
+            console.log(prompt);
             const stream = session.promptStreaming(prompt);
             for await (const chunk of stream) {
                 //console.log(chunk);
@@ -521,8 +522,12 @@ print $1L$ ${userInput} $STP$ as the first line!
         const ancestors = [input];
         this.getAncestors(input, ancestors);
         console.log(ancestors);
-
+        let additional_data_prompt = "";
+        if (this.additional_data !== ""){
+            additional_data_prompt = `Here is the additional information: ${this.additional_data}`;
+        }
         const prompt = `
+        ${additional_data_prompt}
         Here is the information I provided:
         ${ancestors.reverse().join(' -> ')}
         Please produce a detailed description of the ${input}
@@ -553,7 +558,7 @@ print $1L$ ${userInput} $STP$ as the first line!
 
             // Generate the prompt
             const prompt = this.generate_description_prompt(keyword);
-
+            console.log(prompt);
             // Start streaming the AI response
             const stream = this.session.promptStreaming(prompt);
             for await (const chunk of stream) {

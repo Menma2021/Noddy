@@ -28,7 +28,7 @@ class ContentManager{
             this.main_content = new MainContent(key_data,this);
         }
         else{
-            this.main_content = new MainContent(key_data,this,key_data+"->"+additional_data);
+            this.main_content = new MainContent(key_data,this,this.main_content.key_data+"->"+additional_data);
         }
         this.bind_navigation_button(this.main_content);
         this.content_list.push(this.main_content);

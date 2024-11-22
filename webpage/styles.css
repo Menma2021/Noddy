@@ -118,7 +118,7 @@ body[data-theme='light'] .summary_box{
     background-color: #dbdbdb5e;
     width: 70%;
     height: 30%;
-    overflow: scroll;
+    overflow-y: scroll;
     position: absolute;
     left: 15%;
     bottom: 0;
@@ -135,7 +135,7 @@ body[data-theme='dark'] .summary_box{
     color: #ddd;
     width: 70%;
     height: 30%;
-    overflow: scroll;
+    overflow-y: scroll;
     position: absolute;
     left: 15%;
     bottom: 0;
@@ -152,7 +152,7 @@ body[data-theme='light'] .discription_box{
     stroke: black;
     opacity: 0.9;
     border-radius: 10px;
-    overflow: scroll;
+    overflow-y: scroll;
     text-align: center;
     padding: 10px;
 }
@@ -164,7 +164,7 @@ body[data-theme='dark'] .discription_box{
     color: white;
     opacity: 0.9;
     border-radius: 10px;
-    overflow: scroll;
+    overflow-y: scroll;
     text-align: center;
     padding: 10px;
 }
@@ -274,7 +274,31 @@ input {
 }
 #navigation_button_container{
     height: 100%;
-    overflow: scroll;
+    overflow-y: scroll;
     width: 100%;
+}
+
+/* Webkit scrollbar styles */
+*::-webkit-scrollbar {
+    width: 8px; /* Scrollbar width */
+}
+
+*::-webkit-scrollbar-track {
+background: #4b4a4a00; /* Scrollbar track background color */
+border-radius: 1px; /* Border radius */
+}
+
+
+body[data-theme='light'] *::-webkit-scrollbar-thumb {
+background: #272727; /* Scrollbar thumb color */
+border-radius: 6px; /* Border radius */
+}
+body[data-theme='dark'] *::-webkit-scrollbar-thumb {
+background: #ddd; /* Scrollbar thumb color */
+border-radius: 6px; /* Border radius */
+}
+
+*::-webkit-scrollbar-thumb:hover {
+background: #555; /* Thumb color on hover */
 }
 

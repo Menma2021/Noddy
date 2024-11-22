@@ -24,6 +24,9 @@ class ContentManager{
             console.log(additional_data_new)
             this.main_content = new MainContent(key_data,this,additional_data_new);
         }
+        else if (additional_data==""){
+            this.main_content = new MainContent(key_data,this);
+        }
         else{
             this.main_content = new MainContent(key_data,this,key_data+"->"+additional_data);
         }

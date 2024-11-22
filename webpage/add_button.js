@@ -45,7 +45,7 @@ class AddButton {
         this.inputField.addEventListener('change', () => {
             const input = this.inputField.value;
             if (input) {
-                this.content_manager.generate_content(input, "additional_data");
+                this.content_manager.generate_content(input, "");
                 this.inputField.value = ''; // Clear input field
                 this.inputField.style.display = 'none'; // Hide input field after use
             }

@@ -286,8 +286,59 @@ class Graph {
         this.node.append("text")
             .attr("dy", -40)
             .attr("dx", -40)
-            .text(d => d.id);
-  
+            .text(d => d.id)
+            .on("dblclick", (event, d) => {
+                // Highlight the text
+                d3.select(event.target)
+                    .style("background-color", "yellow")  // Highlight the text by changing background color
+                    .style("cursor", "text");  // Change cursor to text selection
+    
+                // Create an input field to edit the text
+                const input = document.createElement('input');
+                input.value = d.id;  // Set the current text value as the default value
+                input.style.position = 'absolute';
+                input.style.left = `${event.pageX}px`;
+                input.style.top = `${event.pageY}px`;
+                input.style.zIndex = 1000; // Make sure the input is on top
+                input.style.padding = '5px';
+                input.style.fontSize = '14px';
+    
+                // Append the input to the body
+                document.body.appendChild(input);
+    
+                // Focus on the input field to start editing
+                input.focus();
+    
+                // When the user presses Enter, save the new value
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        // Update the node data with the new text
+                        d.id = input.value;
+    
+                        // Update the text label in the graph
+                        d3.select(event.target).text(input.value);
+    
+                        // Remove the input field after editing
+                        document.body.removeChild(input);
+    
+                        // Remove the highlight after editing
+                        d3.select(event.target).style("background-color", null);
+                    } else if (e.key === 'Backspace' && input.value === '') {
+                        // If the input value is empty and Backspace is pressed, delete the text
+                        d3.select(event.target).text('');  // Remove the text from the node
+                        document.body.removeChild(input);  // Remove the input field
+                        d3.select(event.target).style("background-color", null); // Remove the highlight
+                    }
+                });
+    
+                // If the user clicks outside, cancel the editing and remove the input
+                input.addEventListener('blur', () => {
+                    document.body.removeChild(input);
+    
+                    // Remove the highlight if the input is blurred
+                    d3.select(event.target).style("background-color", null);
+                });
+            });  
         // Update positions on each tick of the simulation
         this.simulation.on("tick", () => {
             this.link

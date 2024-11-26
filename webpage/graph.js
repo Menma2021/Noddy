@@ -312,8 +312,11 @@ class Graph {
                 // When the user presses Enter, save the new value
                 input.addEventListener('keydown', (e) => {
                     if (e.key === 'Enter') {
+                        this.edit_node(d.id,input.value)
                         // Update the node data with the new text
-                        d.id = input.value;
+                        //d.id = input.value;
+                        //this.content_manager.generate_content(input.value,"");
+                        
     
                         // Update the text label in the graph
                         d3.select(event.target).text(input.value);
@@ -408,7 +411,62 @@ class Graph {
         nodeEnter.append("text")
             .attr("dy", -40)
             .attr("dx", -40)
-            .text(d => d.id);
+            .text(d => d.id)
+            .on("dblclick", (event, d) => {
+                // Highlight the text
+                d3.select(event.target)
+                    .style("background-color", "yellow")  // Highlight the text by changing background color
+                    .style("cursor", "text");  // Change cursor to text selection
+    
+                // Create an input field to edit the text
+                const input = document.createElement('input');
+                input.value = d.id;  // Set the current text value as the default value
+                input.style.position = 'absolute';
+                input.style.left = `${event.pageX}px`;
+                input.style.top = `${event.pageY}px`;
+                input.style.zIndex = 1000; // Make sure the input is on top
+                input.style.padding = '5px';
+                input.style.fontSize = '14px';
+    
+                // Append the input to the body
+                document.body.appendChild(input);
+    
+                // Focus on the input field to start editing
+                input.focus();
+    
+                // When the user presses Enter, save the new value
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        this.edit_node(d.id,input.value)
+                        // Update the node data with the new text
+                        //d.id = input.value;
+                        //this.content_manager.generate_content(input.value,"");
+
+    
+                        // Update the text label in the graph
+                        d3.select(event.target).text(input.value);
+    
+                        // Remove the input field after editing
+                        document.body.removeChild(input);
+    
+                        // Remove the highlight after editing
+                        d3.select(event.target).style("background-color", null);
+                    } else if (e.key === 'Backspace' && input.value === '') {
+                        // If the input value is empty and Backspace is pressed, delete the text
+                        d3.select(event.target).text('');  // Remove the text from the node
+                        document.body.removeChild(input);  // Remove the input field
+                        d3.select(event.target).style("background-color", null); // Remove the highlight
+                    }
+                });
+    
+                // If the user clicks outside, cancel the editing and remove the input
+                input.addEventListener('blur', () => {
+                    document.body.removeChild(input);
+    
+                    // Remove the highlight if the input is blurred
+                    d3.select(event.target).style("background-color", null);
+                });
+            }); 
 
         this.node = nodeEnter.merge(this.node);
         this.simulation.nodes(newData.nodes);
@@ -440,6 +498,11 @@ class Graph {
 
     // Get graph data from AI
     async get_graph_data(additional_data="") {
+        const func=this.updateGraph.bind(this);
+        const userInput = this.central_node;
+        await this.generate_graph_stream(userInput,func,additional_data);
+    }
+    async generate_graph_stream(userInput,function_to_call,additional_data="") {
         this.additional_data = additional_data;
         const {available, defaultTemperature, defaultTopK, maxTopK } = await ai.languageModel.capabilities();
 
@@ -448,7 +511,7 @@ class Graph {
             this.main_content.sessions.push(session);
 
             // Prompt the model and stream the result:
-            const userInput = this.central_node;
+            
             let additional_data_prompt = "";
             if (additional_data !== ""){
                 additional_data_prompt = `Here is the additional information: ${additional_data}`;
@@ -505,11 +568,13 @@ print $1L$ ${userInput} $STP$ as the first line!
 `;
             console.log(prompt);
             const stream = session.promptStreaming(prompt);
+            let new_data = {};
             for await (const chunk of stream) {
                 //console.log(chunk);
-                const new_data = this.transform_data(chunk);
-                this.updateGraph(new_data);
+                new_data = this.transform_data(chunk);
+                function_to_call(new_data);
             }
+            return new_data;
         }
     }
 
@@ -621,5 +686,75 @@ print $1L$ ${userInput} $STP$ as the first line!
             // Cache the description once fully loaded
             this.description_dict[keyword] = this.content_element.innerHTML;
         }
+    }
+
+    async edit_node(node,new_node){
+        const func=(p1, p2 = node,p3=new_node) => this.updateNode(p1, p2,p3)
+        this.previous_data = structuredClone(this.data);
+        console.log(this.previous_data);
+        const ancestors = [node];
+        
+        this.getAncestors(node,ancestors);
+        const additional_data = "Here is the information I provided: " + ancestors.reverse().join(' -> ');
+        const new_data = await this.generate_graph_stream(new_node,func,additional_data);
+        
+    }
+    updateNode(new_data,node,new_node){
+        console.log(this.previous_data);
+        console.log(new_data);
+        // Find the corresponding node in the new data
+        // Update node id in previous data
+        let previous_data = structuredClone(this.previous_data);
+        
+        // Update link target id in previous data 
+        //let previous_links = previous_data.links;
+        previous_data.links.forEach(l => {
+            if(l.target.id == node) {
+                l.target.id = new_node;
+            }
+        });
+        previous_data.nodes.forEach(n => {
+            if (n.id == node){
+                n.id = new_node;
+            }
+        });
+        // Remove nodes with target.id === new_node and their descendants
+        const nodesToRemove = new Set();
+        const findDescendants = (nodeId) => {
+            previous_data.links.forEach(l => {
+                if(l.source.id === nodeId) {
+                    nodesToRemove.add(l.target.id);
+                    findDescendants(l.target.id);
+                }
+            });
+        };
+
+        previous_data.links.forEach(l => {
+            if(l.target.id == new_node) {
+                //nodesToRemove.add(l.target.id);
+                findDescendants(l.target.id);
+            }
+        });
+
+        previous_data.nodes = previous_data.nodes.filter(n => !nodesToRemove.has(n.id));
+        previous_data.links = previous_data.links.filter(l => !nodesToRemove.has(l.target.id));
+
+        // Merge with new data
+        new_data.nodes.forEach(node => {
+            // if (node.isCentral) {
+            //     node.id = new_node;
+            // }
+            node.isCentral = false;
+        });
+        new_data.nodes = new_data.nodes.filter(n => n.id != new_node);
+
+        const update_data = {
+            nodes: [...previous_data.nodes, ...new_data.nodes],
+            links: [...previous_data.links, ...new_data.links]
+        };
+       
+        this.updateGraph(update_data);
+        console.log(this.data);
+        
     }
 }

@@ -2,22 +2,52 @@
 this file manage the content of the page
 it manage the main content object
 it also manage the navigation bar
-Xuanpei Chen 2024/11/11
+2024/11/11
 */
 
 class ContentManager{
     constructor(key_data){
+        this.detect_language(key_data);
         this.navigation_button_container = document.getElementById('navigation_button_container');
         this.main_content = new MainContent(key_data,this);
         this.bind_navigation_button(this.main_content);
         this.content_list = [this.main_content];
         
     }
+    async detect_language(text){
+        const canDetect = await translation.canDetect();
+        let detector;
+        if (canDetect === 'no') {
+          // The language detector isn't usable.
+          return;
+        }
+        if (canDetect === 'readily') {
+            // The language detector can immediately be used.
+            detector = await translation.createDetector();
+            const results = await detector.detect(text);
+            let language = results[0].detectedLanguage;
+            console.log(language);
+            console.log(await translation.canTranslate({sourceLanguage: 'en',targetLanguage: language,}));
+            if (language!="en" && await translation.canTranslate({sourceLanguage: 'en',targetLanguage: language,})=="readily"){
+                console.log("translate");
+                const translator = await translation.createTranslator({
+                    sourceLanguage: 'en',
+                    targetLanguage: language,
+                  });
+                const translatedText = await translator.translate(text);
+                console.log(translatedText);
+            }
+            return language;
 
-    generate_content(key_data,additional_data){
+        }
+    }
+
+    async generate_content(key_data,additional_data){
         /*generate a new content by the key_data
         and add it to the content_list
         */
+        
+        
         this.hide_all_content();
         if (this.main_content.additional_data!=""){
             const additional_data_new = this.main_content.additional_data+"->"+additional_data;
@@ -68,9 +98,13 @@ class ContentManager{
         this.main_content = content;
     }
     delete_content(content,element){
+        if (this.content_list.length==1){
+            return;
+        }
         this.content_list = this.content_list.filter(item => item !== content);
         content.destroy_content();
-        if (content===this.main_content){
+        console.log(this.content_list.length);
+        if (content===this.main_content ){
             this.navigation_button_container.removeChild(element);
             this.main_content = this.content_list[0];
             this.change_content(this.main_content);

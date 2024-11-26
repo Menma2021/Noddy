@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "My Chrome Extension",
+  "name": "Noddy",
   "version": "1.0",
-  "description": "This is a demo Chrome extension.",
+  "description": "Simply enter your keyword into Noddy, and instantly get a customized bubble diagram to guide you. Break down complex ideas into clear, manageable subtopics.",
   "permissions": ["tabs", "activeTab", "scripting", "webNavigation"],
   "host_permissions": ["https://*/*", "http://*/*"],
   "background": {

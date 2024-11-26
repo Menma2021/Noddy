@@ -288,59 +288,10 @@ class Graph {
             .attr("dx", -40)
             .text(d => d.id)
             .on("dblclick", (event, d) => {
-                // Highlight the text
-                d3.select(event.target)
-                    .style("background-color", "yellow")  // Highlight the text by changing background color
-                    .style("cursor", "text");  // Change cursor to text selection
-    
-                // Create an input field to edit the text
-                const input = document.createElement('input');
-                input.value = d.id;  // Set the current text value as the default value
-                input.style.position = 'absolute';
-                input.style.left = `${event.pageX}px`;
-                input.style.top = `${event.pageY}px`;
-                input.style.zIndex = 1000; // Make sure the input is on top
-                input.style.padding = '5px';
-                input.style.fontSize = '14px';
-    
-                // Append the input to the body
-                document.body.appendChild(input);
-    
-                // Focus on the input field to start editing
-                input.focus();
-    
-                // When the user presses Enter, save the new value
-                input.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter') {
-                        this.edit_node(d.id,input.value)
-                        // Update the node data with the new text
-                        //d.id = input.value;
-                        //this.content_manager.generate_content(input.value,"");
-                        
-    
-                        // Update the text label in the graph
-                        d3.select(event.target).text(input.value);
-    
-                        // Remove the input field after editing
-                        document.body.removeChild(input);
-    
-                        // Remove the highlight after editing
-                        d3.select(event.target).style("background-color", null);
-                    } else if (e.key === 'Backspace' && input.value === '') {
-                        // If the input value is empty and Backspace is pressed, delete the text
-                        d3.select(event.target).text('');  // Remove the text from the node
-                        document.body.removeChild(input);  // Remove the input field
-                        d3.select(event.target).style("background-color", null); // Remove the highlight
-                    }
-                });
-    
-                // If the user clicks outside, cancel the editing and remove the input
-                input.addEventListener('blur', () => {
-                    document.body.removeChild(input);
-    
-                    // Remove the highlight if the input is blurred
-                    d3.select(event.target).style("background-color", null);
-                });
+                if (!d.isCentral)
+                {
+                    this.edit_node(d.id, d.id)
+                }
             });  
         // Update positions on each tick of the simulation
         this.simulation.on("tick", () => {
@@ -413,60 +364,11 @@ class Graph {
             .attr("dx", -40)
             .text(d => d.id)
             .on("dblclick", (event, d) => {
-                // Highlight the text
-                d3.select(event.target)
-                    .style("background-color", "yellow")  // Highlight the text by changing background color
-                    .style("cursor", "text");  // Change cursor to text selection
-    
-                // Create an input field to edit the text
-                const input = document.createElement('input');
-                input.value = d.id;  // Set the current text value as the default value
-                input.style.position = 'absolute';
-                input.style.left = `${event.pageX}px`;
-                input.style.top = `${event.pageY}px`;
-                input.style.zIndex = 1000; // Make sure the input is on top
-                input.style.padding = '5px';
-                input.style.fontSize = '14px';
-    
-                // Append the input to the body
-                document.body.appendChild(input);
-    
-                // Focus on the input field to start editing
-                input.focus();
-    
-                // When the user presses Enter, save the new value
-                input.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter') {
-                        this.edit_node(d.id,input.value)
-                        // Update the node data with the new text
-                        //d.id = input.value;
-                        //this.content_manager.generate_content(input.value,"");
-
-    
-                        // Update the text label in the graph
-                        d3.select(event.target).text(input.value);
-    
-                        // Remove the input field after editing
-                        document.body.removeChild(input);
-    
-                        // Remove the highlight after editing
-                        d3.select(event.target).style("background-color", null);
-                    } else if (e.key === 'Backspace' && input.value === '') {
-                        // If the input value is empty and Backspace is pressed, delete the text
-                        d3.select(event.target).text('');  // Remove the text from the node
-                        document.body.removeChild(input);  // Remove the input field
-                        d3.select(event.target).style("background-color", null); // Remove the highlight
-                    }
-                });
-    
-                // If the user clicks outside, cancel the editing and remove the input
-                input.addEventListener('blur', () => {
-                    document.body.removeChild(input);
-    
-                    // Remove the highlight if the input is blurred
-                    d3.select(event.target).style("background-color", null);
-                });
-            }); 
+                if (!d.isCentral)
+                {
+                    this.edit_node(d.id, d.id)
+                }
+            });  
 
         this.node = nodeEnter.merge(this.node);
         this.simulation.nodes(newData.nodes);
@@ -517,7 +419,12 @@ class Graph {
                 additional_data_prompt = `Here is the additional information: ${additional_data}`;
             }
             const prompt = `
-When a user searches for a keyword, generate a structured response with the following requirements:
+When a user searches for a keyword or provides a sentence, extract the central topic or main keyword(s) from the input to use as the main node in the structured response. If the user input is a sentence or question, extract only the central topic or main phrase. Examples:
+   - "Name the largest countries of the world" -> "The largest countries"
+   - "Demonstrate how World War 2 went" -> "World War 2"
+   - "Which ethnicities live in Europe" -> "European ethnicities"
+   - "Help me with my homework" -> "Homework advices".
+If the user input is already concise or a single keyword (e.g., "Python"), use it as-is. Afterwards, follow this requirements:
 
 1. Each line must strictly follow this format: $NL$ ? $STP$, where:
    - $NL$ represents the level indicator, L means level (e.g., $1L$, $2L$, $3L$, etc.).

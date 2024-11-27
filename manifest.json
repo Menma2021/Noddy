@@ -22,5 +22,7 @@
       "matches": ["https://*/*"],
       "js": ["plugin/content.js"]
     }
-  ]
+  ],
+  "trial_tokens":["AupCwuZfEh1k1eaPD6qFKNWedpPabiAXAMl/6p+Miwv4liux6ZBG1r0qevOwUnBz+zovB99zfyk59szAeW5KNgQAAABveyJvcmlnaW4iOiJjaHJvbWUtZXh0ZW5zaW9uOi8va2hmZG9ra3BlYWduY25pY2Fnbm1tZnBoaHBoYm9ramkiLCJmZWF0dXJlIjoiVHJhbnNsYXRpb25BUEkiLCJleHBpcnkiOjE3NTMxNDI0MDB9"]
+
 }

@@ -7,40 +7,14 @@ it also manage the navigation bar
 
 class ContentManager{
     constructor(key_data){
-        this.detect_language(key_data);
+        
         this.navigation_button_container = document.getElementById('navigation_button_container');
         this.main_content = new MainContent(key_data,this);
         this.bind_navigation_button(this.main_content);
         this.content_list = [this.main_content];
         
     }
-    async detect_language(text){
-        const canDetect = await translation.canDetect();
-        let detector;
-        if (canDetect === 'no') {
-          // The language detector isn't usable.
-          return;
-        }
-        if (canDetect === 'readily') {
-            // The language detector can immediately be used.
-            detector = await translation.createDetector();
-            const results = await detector.detect(text);
-            let language = results[0].detectedLanguage;
-            console.log(language);
-            console.log(await translation.canTranslate({sourceLanguage: 'en',targetLanguage: language,}));
-            if (language!="en" && await translation.canTranslate({sourceLanguage: 'en',targetLanguage: language,})=="readily"){
-                console.log("translate");
-                const translator = await translation.createTranslator({
-                    sourceLanguage: 'en',
-                    targetLanguage: language,
-                  });
-                const translatedText = await translator.translate(text);
-                console.log(translatedText);
-            }
-            return language;
-
-        }
-    }
+    
 
     async generate_content(key_data,additional_data){
         /*generate a new content by the key_data

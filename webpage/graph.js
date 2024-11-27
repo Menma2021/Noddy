@@ -8,7 +8,7 @@ class Graph {
         this.content_manager = content_manager;
         this.data = {
           nodes: [ // all nodes
-              { id: central_node, isCentral: true },
+              { id: central_node, isCentral: true, translated: false, translated_id: central_node },
           ],
           links: [ // all nodes connections
           ]
@@ -286,7 +286,7 @@ class Graph {
         this.node.append("text")
             .attr("dy", -40)
             .attr("dx", -40)
-            .text(d => d.id)
+            .text(d => d.translated ? d.translated_id : d.id)
             .on("dblclick", (event, d) => {
                 if (!d.isCentral)
                 {
@@ -306,8 +306,40 @@ class Graph {
         });
     }
 
+    // Assign data to the graph change check whether it is translated or not
+    async assign_data(data){
+        if (this.main_content.language=="en"){
+            this.data = data;
+            return;
+        }
+        else{
+            for (const node of data.nodes){
+                const match_node = this.find_match_node(node.id);
+                if (match_node){
+                    node.translated = match_node.translated;
+                    node.translated_id = match_node.translated_id;
+                } 
+                if (!node.translated){
+                    const translated_text = await this.main_content.translate_data_back(node.id,this.main_content.language);
+                    node.translated = true;
+                    node.translated_id = translated_text;
+                }
+            }
+
+            this.data = data;
+        }
+    }
+    find_match_node(node_id){
+        for (const node of this.data.nodes){
+            if (node.id == node_id){
+                return node;
+            }
+        }
+        return null;
+    }
+    
     // Update the graph with new data
-    updateGraph(newData) {
+    async updateGraph(newData) {
         if (JSON.stringify(newData) === JSON.stringify(this.data)) {
             return;
         }
@@ -322,7 +354,7 @@ class Graph {
                 node.y = this.height / 2;
             }
         });
-        this.data = newData;
+        await this.assign_data(newData);
 
         // Update links
         this.link = this.link.data(newData.links);
@@ -362,7 +394,7 @@ class Graph {
         nodeEnter.append("text")
             .attr("dy", -40)
             .attr("dx", -40)
-            .text(d => d.id)
+            .text(d => d.translated ? d.translated_id : d.id)
             .on("dblclick", (event, d) => {
                 if (!d.isCentral)
                 {
@@ -401,7 +433,10 @@ class Graph {
     // Get graph data from AI
     async get_graph_data(additional_data="") {
         const func=this.updateGraph.bind(this);
-        const userInput = this.central_node;
+        let userInput = this.central_node;
+        if (this.main_content.language!="en"){
+            userInput = await this.main_content.translate_data(userInput,this.main_content.language);
+        }
         await this.generate_graph_stream(userInput,func,additional_data);
     }
     async generate_graph_stream(userInput,function_to_call,additional_data="") {
@@ -479,7 +514,7 @@ print $1L$ ${userInput} $STP$ as the first line!
             for await (const chunk of stream) {
                 //console.log(chunk);
                 new_data = this.transform_data(chunk);
-                function_to_call(new_data);
+                await function_to_call(new_data);
             }
             return new_data;
         }
@@ -503,7 +538,7 @@ print $1L$ ${userInput} $STP$ as the first line!
     
             // Adding node to the list if not already present
             if (!nodes.some(node => node.id === nodeName)) {
-                nodes.push({ id: nodeName, isCentral: layer === 1 });
+                nodes.push({ id: nodeName, isCentral: layer === 1, translated: false, translated_id: nodeName });
             }
     
             // Adding nodes based on layer
@@ -596,7 +631,7 @@ print $1L$ ${userInput} $STP$ as the first line!
     }
 
     async edit_node(node,new_node){
-        const func=(p1, p2 = node,p3=new_node) => this.updateNode(p1, p2,p3)
+        const func=async (p1, p2 = node,p3=new_node) => await this.updateNode(p1, p2,p3)
         this.previous_data = structuredClone(this.data);
         console.log(this.previous_data);
         const ancestors = [node];
@@ -606,7 +641,7 @@ print $1L$ ${userInput} $STP$ as the first line!
         const new_data = await this.generate_graph_stream(new_node,func,additional_data);
         
     }
-    updateNode(new_data,node,new_node){
+    async updateNode(new_data,node,new_node){
         console.log(this.previous_data);
         console.log(new_data);
         // Find the corresponding node in the new data
@@ -660,7 +695,7 @@ print $1L$ ${userInput} $STP$ as the first line!
             links: [...previous_data.links, ...new_data.links]
         };
        
-        this.updateGraph(update_data);
+        await this.updateGraph(update_data);
         console.log(this.data);
         
     }

@@ -23,6 +23,49 @@ class MainContent {
         this.sessions = [];
 
     }
+    async detect_language(text){
+        const canDetect = await translation.canDetect();
+        let detector;
+        if (canDetect === 'no') {
+          // The language detector isn't usable.
+          return "en";
+        }
+        if (canDetect === 'readily') {
+            // The language detector can immediately be used.
+            detector = await translation.createDetector();
+            const results = await detector.detect(text);
+            console.log(results);
+            let language = results[0].detectedLanguage;
+            return language;
+            
+
+        }
+        return "en";
+    }
+    async translate_data(text,language){
+        console.log(language,text);
+        if (language!="en" && await translation.canTranslate({sourceLanguage: 'en',targetLanguage: language,})=="readily"){
+            console.log(language,text);
+            const translator = await translation.createTranslator({
+                sourceLanguage: language,
+                targetLanguage: 'en',
+              });
+            const translatedText = await translator.translate(text);
+            console.log(translatedText);
+            return translatedText;
+        }
+        return text;
+    }
+    async translate_data_back(text,language){
+        if (language!="en" && await translation.canTranslate({sourceLanguage: language,targetLanguage: 'en',})=="readily"){
+            const translator = await translation.createTranslator({
+                sourceLanguage: "en",
+                targetLanguage: language,
+              });
+            const translatedText = await translator.translate(text);
+            return translatedText;
+        }
+    }
 
     initinal_graph(key_data){
         this.element_graph = document.createElement('div');
@@ -37,6 +80,8 @@ class MainContent {
     }
     async start_generate_graph(additional_data) {
         // Generate graph data asynchronously
+        const language = await this.detect_language(this.key_data);
+        this.language = language;
         await this.graph.get_graph_data(additional_data);
 
         const graphData = this.graph.data; // Make sure graphData is available here

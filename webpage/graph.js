@@ -512,7 +512,7 @@ print $1L$ ${userInput} $STP$ as the first line!
             const stream = session.promptStreaming(prompt);
             let new_data = {};
             for await (const chunk of stream) {
-                //console.log(chunk);
+                
                 new_data = this.transform_data(chunk);
                 await function_to_call(new_data);
             }

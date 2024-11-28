@@ -34,11 +34,10 @@ class MainContent {
             // The language detector can immediately be used.
             detector = await translation.createDetector();
             const results = await detector.detect(text);
-            console.log(results);
-            let language = results[0].detectedLanguage;
-            return language;
-            
-
+            if (results[0].confidence>0.5){
+                let language = results[0].detectedLanguage;
+                return language;
+            }
         }
         return "en";
     }

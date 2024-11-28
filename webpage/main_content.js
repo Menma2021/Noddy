@@ -122,7 +122,8 @@ class MainContent {
         const {available, defaultTemperature, defaultTopK, maxTopK } = await ai.languageModel.capabilities();
 
         this.summary_box.innerHTML = "Loading description...";
-
+        this.summary_translater = new MarkdoneTranslater(this);
+        this.summary_translater.set_language(this.language);
         if (available !== "no") {
             const session = await ai.languageModel.create();
             this.sessions.push(session);
@@ -133,7 +134,10 @@ class MainContent {
             
             // Send the prompt to the AI and stream the result            
             const stream = session.promptStreaming(prompt);
-            for await (const chunk of stream) {
+            for await (let chunk of stream) {
+                if (this.language!="en"){
+                    chunk = await this.summary_translater.translate_markdown(chunk);
+                }
                 //console.log(chunk);
                 // Insert the summary into the summary_box container on the HTML page
                 this.summary_box.innerHTML = marked.parse(chunk);

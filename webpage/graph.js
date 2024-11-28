@@ -153,7 +153,7 @@ class Graph {
     }
 
     // Handle node hover events
-    async node_hover_listener(circle_element) {
+    async node_hover_listener(circle_element,node_id) {
         // delay timer
         let signal = false;
         
@@ -193,7 +193,7 @@ class Graph {
                     this.box_element.appendChild(this.content_element);
         
                     this.main_content.element.appendChild(this.box_element);
-                    this.generate_description(title, this.content_element);
+                    this.generate_description(node_id, this.content_element);
         
                     console.log(circle_element);
                     console.log(d3.select(circle_element));
@@ -369,7 +369,7 @@ class Graph {
             .attr("r", d => d.isCentral ? 35 : 20)
             .on("mouseover", (event, d) => {
                 console.log(this); 
-                this.node_hover_listener(event.currentTarget);
+                this.node_hover_listener(event.currentTarget,d.id);
                 d3.select(event.currentTarget) 
                     .transition()
                     .duration(200)
@@ -604,7 +604,8 @@ print $1L$ ${userInput} $STP$ as the first line!
 
         // Set a loading indicator while waiting for the AI response
         this.content_element.innerHTML = "Loading description...";
-
+        this.description_translater = new MarkdoneTranslater(this.main_content);
+        this.description_translater.set_language(this.main_content.language);
         const { available } = await ai.languageModel.capabilities();
         if (available !== "no") {
             // Initialize session for generating description
@@ -619,8 +620,11 @@ print $1L$ ${userInput} $STP$ as the first line!
             console.log(prompt);
             // Start streaming the AI response
             const stream = this.session.promptStreaming(prompt);
-            for await (const chunk of stream) {
+            for await (let chunk of stream) {
                 console.log(chunk);
+                if (this.main_content.language!="en"){
+                    chunk = await this.description_translater.translate_markdown(chunk);
+                }
                 // Update the content element as the response streams in
                 this.content_element.innerHTML = marked.parse(chunk);
             }

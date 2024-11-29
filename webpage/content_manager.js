@@ -25,7 +25,7 @@ class ContentManager{
         this.hide_all_content();
         if (this.main_content.additional_data!=""){
             const additional_data_new = this.main_content.additional_data+"->"+additional_data;
-            console.log(additional_data_new)
+            //console.log(additional_data_new)
             this.main_content = new MainContent(key_data,this,additional_data_new);
         }
         else if (additional_data==""){
@@ -77,7 +77,7 @@ class ContentManager{
         }
         this.content_list = this.content_list.filter(item => item !== content);
         content.destroy_content();
-        console.log(this.content_list.length);
+        //console.log(this.content_list.length);
         if (content===this.main_content ){
             this.navigation_button_container.removeChild(element);
             this.main_content = this.content_list[0];
@@ -104,7 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const navigationContainer = document.getElementById('navigation_container');
     if (navigationContainer) {
         const navBounds = navigationContainer.getBoundingClientRect();
-        console.log(navBounds);
+        //console.log(navBounds);
     } else {
         console.error('navigation_container element not found.');
     }

@@ -98,7 +98,7 @@ class Graph {
             const delta = event.deltaY/100;
             const min_scale = 0.5;
             const newScale = Math.max(min_scale, this.scale + delta);
-            console.log(newScale);
+            //console.log(newScale);
             const mouse_x = event.clientX - this.svg.node().getBoundingClientRect().left;
             const mouse_y = event.clientY - this.svg.node().getBoundingClientRect().top;
             const viewBox = this.svg.attr("viewBox").split(" ");
@@ -106,7 +106,7 @@ class Graph {
             const viewBoxY = parseFloat(viewBox[1]);
             const viewBoxWidth = parseFloat(viewBox[2]);
             const viewBoxHeight = parseFloat(viewBox[3]);
-            console.log(viewBoxX,viewBoxY,viewBoxWidth,viewBoxHeight);
+            //console.log(viewBoxX,viewBoxY,viewBoxWidth,viewBoxHeight);
             const elementWidth = this.svg.node().clientWidth;
             const elementHeight = this.svg.node().clientHeight;
             const mouse_x_viewbox = viewBoxX + (mouse_x / elementWidth) * viewBoxWidth;
@@ -195,8 +195,8 @@ class Graph {
                     this.main_content.element.appendChild(this.box_element);
                     this.generate_description(node_id, this.content_element);
         
-                    console.log(circle_element);
-                    console.log(d3.select(circle_element));
+                    //console.log(circle_element);
+                    //console.log(d3.select(circle_element));
             }, 2000);
         });
             
@@ -233,8 +233,8 @@ class Graph {
     }
 
     node_out_listener(circle_element){
-        console.log(circle_element);
-        console.log(d3.select(circle_element));
+        //console.log(circle_element);
+        //console.log(d3.select(circle_element));
 
         //this.box_element.remove();
     }
@@ -368,7 +368,7 @@ class Graph {
         nodeEnter.append("circle")
             .attr("r", d => d.isCentral ? 35 : 20)
             .on("mouseover", (event, d) => {
-                console.log(this); 
+                //console.log(this); 
                 this.node_hover_listener(event.currentTarget,d.id);
                 d3.select(event.currentTarget) 
                     .transition()
@@ -437,9 +437,9 @@ class Graph {
         if (this.main_content.language!="en"){
             userInput = await this.main_content.translate_data(userInput,this.main_content.language);
         }
-        await this.generate_graph_stream(userInput,func,additional_data);
+        await this.generate_graph_stream(userInput,func,additional_data,10);
     }
-    async generate_graph_stream(userInput,function_to_call,additional_data="") {
+    async generate_graph_stream(userInput,function_to_call,additional_data="",num_nodes=10) {
         this.additional_data = additional_data;
         const {available, defaultTemperature, defaultTopK, maxTopK } = await ai.languageModel.capabilities();
 
@@ -470,7 +470,7 @@ If the user input is already concise or a single keyword (e.g., "Python"), use i
 
 3. Each line must include both $NL$ and $STP$.
 
-4. The response should cover multiple levels and contain at least 10 lines.
+4. The response should cover multiple levels and contain at least ${num_nodes} lines.
 
 5. $NL$ and $STP$ are special characters it is important to follow the format strictly don't include any other characters.
 
@@ -503,12 +503,12 @@ $4L$ Circular $STP$
 $4L$ Priority $STP$
 
 
-Ensure every line follows the exact format, with both $NL$ and $STP$ ($NL$ and $STP$ are special characters it is important to follow the format strictly don't include any other characters), and that there must be at least 10 lines!!!
+Ensure every line follows the exact format, with both $NL$ and $STP$ ($NL$ and $STP$ are special characters it is important to follow the format strictly don't include any other characters), and that there must be at least ${num_nodes} lines!!!
 ${additional_data_prompt}
 Now User input: ${userInput} 
 print $1L$ ${userInput} $STP$ as the first line!
 `;
-            console.log(prompt);
+            //console.log(prompt);
             const stream = session.promptStreaming(prompt);
             let new_data = {};
             for await (const chunk of stream) {
@@ -579,7 +579,7 @@ print $1L$ ${userInput} $STP$ as the first line!
     generate_description_prompt(input){
         const ancestors = [input];
         this.getAncestors(input, ancestors);
-        console.log(ancestors);
+        //console.log(ancestors);
         let additional_data_prompt = "";
         if (this.additional_data !== ""){
             additional_data_prompt = `Here is the additional information: ${this.additional_data}`;
@@ -617,11 +617,11 @@ print $1L$ ${userInput} $STP$ as the first line!
 
             // Generate the prompt
             const prompt = this.generate_description_prompt(keyword);
-            console.log(prompt);
+            //console.log(prompt);
             // Start streaming the AI response
             const stream = this.session.promptStreaming(prompt);
             for await (let chunk of stream) {
-                console.log(chunk);
+                //console.log(chunk);
                 if (this.main_content.language!="en"){
                     chunk = await this.description_translater.translate_markdown(chunk);
                 }
@@ -637,17 +637,17 @@ print $1L$ ${userInput} $STP$ as the first line!
     async edit_node(node,new_node){
         const func=async (p1, p2 = node,p3=new_node) => await this.updateNode(p1, p2,p3)
         this.previous_data = structuredClone(this.data);
-        console.log(this.previous_data);
+        //console.log(this.previous_data);
         const ancestors = [node];
         
         this.getAncestors(node,ancestors);
         const additional_data = "Here is the information I provided: " + ancestors.reverse().join(' -> ');
-        const new_data = await this.generate_graph_stream(new_node,func,additional_data);
+        const new_data = await this.generate_graph_stream(new_node,func,additional_data,3);
         
     }
     async updateNode(new_data,node,new_node){
-        console.log(this.previous_data);
-        console.log(new_data);
+        //console.log(this.previous_data);
+        //console.log(new_data);
         // Find the corresponding node in the new data
         // Update node id in previous data
         let previous_data = structuredClone(this.previous_data);
@@ -700,7 +700,7 @@ print $1L$ ${userInput} $STP$ as the first line!
         };
        
         await this.updateGraph(update_data);
-        console.log(this.data);
+        //console.log(this.data);
         
     }
 }

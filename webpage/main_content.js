@@ -42,15 +42,15 @@ class MainContent {
         return "en";
     }
     async translate_data(text,language){
-        console.log(language,text);
+        //console.log(language,text);
         if (language!="en" && await translation.canTranslate({sourceLanguage: 'en',targetLanguage: language,})=="readily"){
-            console.log(language,text);
+            //console.log(language,text);
             const translator = await translation.createTranslator({
                 sourceLanguage: language,
                 targetLanguage: 'en',
               });
             const translatedText = await translator.translate(text);
-            console.log(translatedText);
+            //console.log(translatedText);
             return translatedText;
         }
         return text;

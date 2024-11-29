@@ -14,7 +14,7 @@ class MarkdoneTranslater{
 
     // Translate individual text
     async translate_data(text){
-        console.log(text);
+        //console.log(text);
         // Return cached translation if available
         if (this.translated_dict[text]){
             return this.translated_dict[text];
@@ -23,7 +23,7 @@ class MarkdoneTranslater{
         if (this.language!="en"){
             const translated_text = await this.main_content.translate_data_back(text,this.language);
             this.translated_dict[text] = translated_text; // Cache the translation
-            console.log(translated_text);
+            //console.log(translated_text);
             return translated_text;
         }
         return text; // Return original text if no translation needed
@@ -59,10 +59,13 @@ class MarkdoneTranslater{
 
         // Split markdown into parts
         const markdownParts = markdown.split(regex); 
+        if (!regex.test(markdownParts[markdownParts.length-1])){
+            markdownParts.splice(-1);
+        }
         // Translate each part
         const translatedParts = await Promise.all(
             markdownParts.map(async (part) => {
-                console.log(part);
+                //console.log(part);
                 
                 // Keep markdown syntax elements unchanged
                 if (regex.test(part) || part.trim() === "") {
@@ -72,10 +75,10 @@ class MarkdoneTranslater{
                 }
             })
         );
-        console.log(translatedParts);
+        //console.log(translatedParts);
         // Join translated parts back into markdown
         const translatedMarkdown = translatedParts.join("");
-        console.log(translatedMarkdown);
+        //console.log(translatedMarkdown);
         return translatedMarkdown;
     }
 }

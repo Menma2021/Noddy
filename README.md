@@ -49,6 +49,7 @@ This projects helps to:
    Ensure that necessary features are insyalled: in Google Chrome Dev, go to *chrome://flags*, and install *Prompt API for Gemini Nano*, *Language detection web platform API* and *Experimental translation API*. More detailed installation proccess: *https://developer.chrome.com/docs/ai/built-in-apis*
 3. Launch the application:
    Open `index.html` from a webpage folder in a Google Chrome Dev to access the platform.
+4. If you want to use extension, go to chrome://extensions, toggle Developer mode and load the "plugin" folder through the "Load unpacked" button
 
 ## Usage
 - **Search for a topic**:

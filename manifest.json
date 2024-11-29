@@ -12,7 +12,7 @@
     "default_popup": "plugin/popup.html",
     "default_icon": "plugin/icon.png"
   },
-  "icon":{
+  "icons":{
       "16": "plugin/icon.png",
       "48": "plugin/icon.png",
       "128": "plugin/icon.png"
